@@ -1,13 +1,10 @@
-import type { NextPage } from 'next'
-import type { AppProps } from 'next/app'
-import 'styles/tailwind.css'
-import Layout from 'components/Layout'
+import "styles/globals.css";
+import Layout from "components/Layout";
 
-const MyApp: NextPage<AppProps> = ({ Component, pageProps }) => {
+export default function App({ Component, pageProps }) {
   return (
     <Layout>
       <Component {...pageProps} />
     </Layout>
-  )
+  );
 }
-export default MyApp

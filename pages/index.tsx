@@ -1,8 +1,19 @@
-import Head from 'next/head'
-import dynamic from 'next/dynamic'
-import { draw, setup } from 'p5/base.p5'
+import Head from "next/head";
+import dynamic from "next/dynamic";
+import Image from "next/dist/client/image";
+import MenuIcon from "@mui/icons-material/Menu";
+import { draw, preload, setup, windowResized } from "p5/placeholder/home.p5";
+import Landing from "p5/landing";
 
-const Sketch = dynamic(import('react-p5'), { ssr: false })
+const Sketch = dynamic(
+  import("react-p5").then((mod) => {
+    // importing sound lib ONLY AFTER REACT-P5 is loaded
+    require("p5/lib/addons/p5.sound");
+    // returning react-p5 default export
+    return mod.default;
+  }),
+  { ssr: false }
+);
 
 export const Home = (): JSX.Element => (
   <>
@@ -13,10 +24,10 @@ export const Home = (): JSX.Element => (
       </Head>
 
       <section className="flex items-center justify-center">
-        <Sketch setup={setup} draw={draw} />
+        <Landing />
       </section>
     </div>
   </>
-)
+);
 
-export default Home
+export default Home;
