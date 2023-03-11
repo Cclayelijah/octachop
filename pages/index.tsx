@@ -1,9 +1,6 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
-import Image from "next/dist/client/image";
-import MenuIcon from "@mui/icons-material/Menu";
-import { draw, preload, setup, windowResized } from "p5/placeholder/home.p5";
-import Landing from "p5/landing";
+import Landing from "game/landing";
 
 const Sketch = dynamic(
   import("react-p5").then((mod) => {
@@ -23,7 +20,7 @@ export const Home = (): JSX.Element => (
         <link rel="icon" href="/favicon/favicon.ico" />
       </Head>
 
-      <section className="flex items-center justify-center">
+      <section>
         <Landing />
       </section>
     </div>

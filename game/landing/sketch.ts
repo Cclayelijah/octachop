@@ -1,6 +1,6 @@
 import type p5Types from "p5";
 import p5 from "p5";
-import { handleMouseClick } from "p5/landing/functions";
+import { handleMouseClick } from "game/landing/functions";
 import { Particle } from "../Particle";
 
 let song;
@@ -64,7 +64,7 @@ export const draw = (p: p5Types): void => {
   // }
   p.image(bg, 0, 0, width + 20, height + 20);
   // p.pop();
-  // // dark filter
+  // dark filter
   // let alpha = p.map(amp, 0, 255, 180, 150);
   // p.fill(0, alpha);
   // p.noStroke();
@@ -92,7 +92,8 @@ export const draw = (p: p5Types): void => {
   //   if (particles[i].edges()) {
   //     particles.splice(i, 1);
   //   } else {
-  //     particles[i].update(amp > 220);
+  //     // particles[i].update(amp > 220);
+  //     particles[i].update(false);
   //     particles[i].show();
   //   }
   // }
