@@ -1,18 +1,30 @@
 import { Vector } from "p5";
+import type p5Types from "p5";
 
+let width: number = 0;
+let height: number = 0;
+let size: number = 0;
+let px: number = 0;
+let edgeLength: number = 0;
 export class Particle {
   pos;
   vel;
   w;
   acc;
   color;
+  static edgeLength;
 
-  constructor() {
-    this.pos = Vector.random2D().mult(edgeLength + NOTE_SIZE);
-    this.vel = createVector(0, 0);
-    this.w = random(2 * PX, 4 * PX);
-    this.acc = this.pos.copy().mult(random(0.001, 0.0001) / (this.w * 5));
-    this.color = (random(180, 255), random(180, 255), random(180, 255));
+  constructor(w: number, h: number, p: p5Types) {
+    width = w;
+    height = h;
+    size = w >= h ? h : w;
+    px = size / 800;
+    Particle.edgeLength = size / 2 - 75 * px;
+    this.pos = Vector.random2D().mult(Particle.edgeLength + 12 * px);
+    this.vel = p.createVector(0, 0);
+    this.w = p.random(2 * px, 4 * px);
+    this.acc = this.pos.copy().mult(p.random(0.001, 0.0001) / (this.w * 5));
+    this.color = (p.random(180, 255), p.random(180, 255), p.random(180, 255));
   }
 
   update(condition) {
@@ -27,18 +39,18 @@ export class Particle {
 
   edges() {
     if (
-      this.pos.x > WIDTH ||
-      this.pos.x < -WIDTH ||
-      this.pos.y > HEIGHT ||
-      this.pos.y < -HEIGHT
+      this.pos.x > width ||
+      this.pos.x < -width ||
+      this.pos.y > height ||
+      this.pos.y < -height
     ) {
       return true;
     } else return false;
   }
 
-  show() {
-    noStroke();
-    fill(this.color);
-    ellipse(this.pos.x, this.pos.y, this.w);
+  show(p) {
+    p.noStroke();
+    p.fill(this.color);
+    p.ellipse(this.pos.x, this.pos.y, this.w);
   }
 }
