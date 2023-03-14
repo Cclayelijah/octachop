@@ -1,4 +1,4 @@
-import React from "react";
+import type { FC } from "react";
 import dynamic from "next/dynamic";
 import { draw, preload, setup, windowResized } from "./sketch";
 // Will only import `react-p5` on client-side
@@ -15,12 +15,7 @@ const Sketch = dynamic(
   }
 );
 
-interface ComponentProps {
-  //Your component props
-}
-
-const Landing: React.FC<ComponentProps> = (props: ComponentProps) => {
-  //See annotations in JS for more information
+const Landing: FC = () => {
   return (
     <Sketch
       preload={preload}
