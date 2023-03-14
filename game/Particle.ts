@@ -1,4 +1,4 @@
-import { Vector } from "p5";
+// import { Vector } from "p5";
 import type p5Types from "p5";
 
 let width: number = 0;
@@ -19,10 +19,10 @@ export class Particle {
     height = h;
     size = w >= h ? h : w;
     px = size / 800;
-    Particle.edgeLength = size / 2 - 75 * px;
-    this.pos = Vector.random2D().mult(Particle.edgeLength + 12 * px);
+    Particle.edgeLength = size / 2 - 140 * px;
+    this.pos = global.p5.Vector.random2D().mult(Particle.edgeLength + 12 * px);
     this.vel = p.createVector(0, 0);
-    this.w = p.random(2 * px, 4 * px);
+    this.w = p.random(3 * px, 5 * px);
     this.acc = this.pos.copy().mult(p.random(0.001, 0.0001) / (this.w * 5));
     this.color = (p.random(180, 255), p.random(180, 255), p.random(180, 255));
   }
@@ -48,7 +48,7 @@ export class Particle {
     } else return false;
   }
 
-  show(p) {
+  show(p: p5Types) {
     p.noStroke();
     p.fill(this.color);
     p.ellipse(this.pos.x, this.pos.y, this.w);
