@@ -1,9 +1,9 @@
 import type p5Types from "p5";
-import p5, { p5InstanceExtensions } from "p5";
 import { handleMouseClick } from "game/landing/functions";
 import { Particle } from "../Particle";
 
 let song;
+let volume = 0.1;
 let fft;
 let particles = [];
 let bg;
@@ -39,8 +39,8 @@ export const setup = (p, canvasParentRef: Element): void => {
   height = p.windowHeight;
   const canvas = p.createCanvas(width, height).parent(canvasParentRef);
   canvas.mouseClicked(() => handleMouseClick(song, p));
-  fft = new global.p5.FFT(0.3);
-  song.setVolume(0.1);
+  fft = new global.p5.FFT(0.1);
+  song.setVolume(volume);
   p.angleMode(p.DEGREES);
 };
 
@@ -75,10 +75,10 @@ export const draw = (p): void => {
   let wave = fft.waveform();
   for (let t = -1; t <= 1; t += 2) {
     p.beginShape();
-    for (let i = 0; i < width; i += 0.5) {
+    for (let i = 0; i < width; i += 1) {
       let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
 
-      let r = p.map(wave[index], -1, 1, 150, 350);
+      let r = p.map(wave[index] * (1 - volume) * 10, -1, 1, 150, 350);
       let x = r * p.sin(i) * t;
       let y = r * p.cos(i);
       p.vertex(x, y);
@@ -92,8 +92,7 @@ export const draw = (p): void => {
     if (particles[i].edges()) {
       particles.splice(i, 1);
     } else {
-      // particles[i].update(amp > 220);
-      particles[i].update(false);
+      particles[i].update(amp > 210);
       particles[i].show(p);
     }
   }
