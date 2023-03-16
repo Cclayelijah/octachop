@@ -111,12 +111,18 @@ export const draw = (p): void => {
   if (amp > 200) {
     p.rotate(p.random(-0.5, 0.5));
   }
-  p.image(bg[songNum], 0, 0, width + 20, height + 20);
+  p.image(
+    bg[songNum],
+    0,
+    0,
+    width + 20 + p.map(amp, 0, 240, 0, width / 5),
+    height + 20 + p.map(amp, 0, 240, 0, height / 5)
+  );
   // slice options
   p.rotate(amp / 20);
   p.stroke(190, 183, 223);
   // p.fill(255, 150);
-  let alpha = p.map(amp, 240, 0, 100, 30);
+  let alpha = p.map(amp, 240, 0, 120, 30);
   // p.fill(0, 100);
   p.fill(0, alpha);
   arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
