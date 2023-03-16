@@ -1,11 +1,9 @@
 // import { Vector } from "p5";
 import type p5Types from "p5";
 
-let width: number = 0;
-let height: number = 0;
-let size: number = 0;
 let px: number = 0;
-let edgeLength: number = 0;
+let p;
+let canvas;
 export class Particle {
   pos;
   vel;
@@ -14,12 +12,11 @@ export class Particle {
   color;
   static edgeLength;
 
-  constructor(w: number, h: number, p: p5Types) {
-    width = w;
-    height = h;
-    size = w >= h ? h : w;
-    px = size / 800;
-    Particle.edgeLength = size / 2 - 140 * px;
+  constructor(pixel, edgeLength, p5: p5Types, c) {
+    canvas = c;
+    p = p5;
+    px = pixel;
+    Particle.edgeLength = edgeLength;
     this.pos = global.p5.Vector.random2D().mult(Particle.edgeLength + 12 * px);
     this.vel = p.createVector(0, 0);
     this.w = p.random(3 * px, 5 * px);
@@ -39,17 +36,19 @@ export class Particle {
 
   edges() {
     if (
-      this.pos.x > width ||
-      this.pos.x < -width ||
-      this.pos.y > height ||
-      this.pos.y < -height
+      this.pos.x > p.windowWidth ||
+      this.pos.x < -p.windowWidth ||
+      this.pos.y > p.windowHeight ||
+      this.pos.y < -p.windowHeight
     ) {
       return true;
     } else return false;
   }
 
-  show(p: p5Types) {
+  show() {
     p.noStroke();
+    if (canvas) canvas.drawingContext.shadowBlur = 2 * px;
+    if (canvas) canvas.drawingContext.shadowColor = "rgb(0, 0, 0)";
     p.fill(this.color);
     p.ellipse(this.pos.x, this.pos.y, this.w);
   }
