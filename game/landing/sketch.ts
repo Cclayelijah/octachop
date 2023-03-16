@@ -116,7 +116,7 @@ export const draw = (p): void => {
   p.rotate(amp / 20);
   p.stroke(190, 183, 223);
   // p.fill(255, 150);
-  let alpha = p.map(amp, 240, 0, 150, 40);
+  let alpha = p.map(amp, 240, 0, 100, 30);
   // p.fill(0, 100);
   p.fill(0, alpha);
   arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
