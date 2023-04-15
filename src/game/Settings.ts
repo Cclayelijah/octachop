@@ -3,11 +3,11 @@ export const DELAY = 0;
 export const DELAY_START = 0; // 3
 // *** VISUAL ***
 export const CURSOR_SIZE = 14;
-export const ANALYZE_AUDIO = true; // turn off to improve performance.
+export const ANALYZE_AUDIO = false; // turn off to improve performance.
 export const SHOW_SLICES = false;
 export const ANCHOR_BEAT = true; // anchor circle grows in size with the beat
 export const IMAGE_TILT = true; // bg image tilt on beat
-export const SHOW_PARTICLES = true; // can affect performance on some browsers
+export const SHOW_PARTICLES = false; // can affect performance on some browsers
 export const OPACITY_FLICKER = true; // opacity flicker on beat
 export const SHOW_WAVEFORM = false; // beta-only feature (nobody likes it lol)
 // *** COLORS ***

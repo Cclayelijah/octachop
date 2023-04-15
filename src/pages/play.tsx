@@ -1,4 +1,4 @@
-import Play from "game/play";
+import Play from "src/game/play";
 import Head from "next/head";
 
 export const PlayPage = (): JSX.Element => (

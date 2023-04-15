@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  web:
+    build:
+      context: ./
+      target: runner
+    volumes:
+      - .:/app
+    command: npm run dev
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: rhino47!
+
+volumes:
+  postgres:
+    name: next-prisma-db

@@ -1,0 +1,93 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Track {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @db.Timestamp(6)
+  beatmapId   Int?     @unique // osu
+  trackSet    TrackSet @relation(fields: [setId], references: [id])
+  setId       Int
+  bgImage     String?
+  difficulty  Float
+  notes       Json
+  breaks      Json
+  file        String? // osu
+  trackPlay   TrackPlay[]
+
+  @@map("track")
+}
+
+model TrackSet {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime @updatedAt @db.Timestamp(6)
+  title         String   @db.VarChar(255) 
+  titleUnicode  String   @db.VarChar(255) @map("title_unicode")
+  artist        String   @db.VarChar(255)
+  artistUnicode String   @db.VarChar(255) @map("artist_unicode")
+  audio         String
+  beatmapSetId  Int      @unique @map("beatmap_set_id")
+  imageDir      String   @map("image_dir")
+  tracks        Track[]
+
+  @@map("track_set")
+}
+
+model TrackPlay {
+  id          Int     @id @default(autoincrement())
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  recording   String?
+  numHits     Int     @map("num_hits")
+  numMisses   Int     @map("num_misses")
+  maxCombo    Int     @map("max_combo")
+  score       Int
+  user        User    @relation(fields: [username], references: [username])
+  username    String
+  track       Track   @relation(fields: [trackId], references: [id])
+  trackId     Int
+
+  @@map("track_play")
+}
+
+model Profile {
+  id        Int     @id @default(autoincrement())
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime @updatedAt @db.Timestamp(6)
+  bio       String?
+  pfp       String?
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int     @unique
+
+  @@map("profile")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime @updatedAt @db.Timestamp(6)
+  username    String    @unique @db.VarChar(255)
+  email       String    @unique
+  firstName   String?   @map("first_name")
+  lastName    String?   @map("last_name")
+  dob         DateTime
+  playTime    BigInt    @map("play_time") @default(0)
+  cc          Int       @default(0)
+  profile     Profile?
+  trackPlay   TrackPlay[]
+
+  @@map("user")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}

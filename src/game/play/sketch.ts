@@ -1,4 +1,4 @@
-import { Particle } from "game/Particle";
+import { Particle } from "src/game/Particle";
 import {
   ANALYZE_AUDIO,
   ANCHOR_BEAT,
@@ -15,7 +15,7 @@ import {
   SHOW_WAVEFORM,
   SLICE_COLOR,
   TRACK_NAME,
-} from "game/Settings";
+} from "src/game/Settings";
 import type p5Types from "p5";
 import { handleStart } from ".";
 

@@ -39,7 +39,7 @@ export const setup = (p, canvasParentRef: Element): void => {
   edgeLength = size / 4;
   canvas = p.createCanvas(width, height).parent(canvasParentRef);
   songNum = Math.floor(Math.random() * songTracks.length) + 1; // random song
-  fft = new global.p5.FFT(0.7);
+  fft = new global.p5.FFT(0.2);
   fft.setInput(songs[songNum]);
   for (let i = 0; i < songs.length; i++) {
     songs[i].setVolume(volume);
@@ -115,8 +115,8 @@ export const draw = (p): void => {
     bg[songNum],
     0,
     0,
-    width + 20 + p.map(amp, 0, 240, 0, width / 5),
-    height + 20 + p.map(amp, 0, 240, 0, height / 5)
+    width + 20 + p.map(amp, 0, 240, 0, width / 8),
+    height + 20 + p.map(amp, 0, 240, 0, height / 8)
   );
   // slice options
   p.rotate(amp / 20);
@@ -142,13 +142,15 @@ export const draw = (p): void => {
   p.stroke(255);
   p.strokeWeight(3);
   let wave = fft.waveform();
+  if (canvas) canvas.drawingContext.shadowColor = "black";
+  if (canvas) canvas.drawingContext.shadowBlur = 100 * px;
   for (let t = -1; t <= 1; t += 2) {
     p.beginShape();
-    for (let i = 0; i < width; i += 1) {
+    for (let i = 0; i < width; i += 0.5) {
       let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
 
       let r =
-        p.map(wave[index], -1, 1, edgeLength / 2, edgeLength * 2 - 100 * px) *
+        p.map(wave[index], -1, 1, 30 * px, edgeLength * 2 - 50 * px) *
         (1 - volume) *
         10;
       let x = r * p.sin(i) * t * 1.2 * px;
@@ -157,6 +159,7 @@ export const draw = (p): void => {
     }
     p.endShape();
   }
+  if (canvas) canvas.drawingContext.shadowBlur = 0 * px;
 
   let particle = new Particle(px, edgeLength, p, canvas);
   particles.push(particle);
