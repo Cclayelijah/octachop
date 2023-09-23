@@ -2,6 +2,7 @@ import type p5Types from "p5";
 import { Particle } from "../Particle";
 import { songTracks } from "./constants";
 
+
 let p;
 let canvas;
 let context;
@@ -14,8 +15,8 @@ let fft;
 let particles = [];
 let bg = [];
 
-let width: number = 0;
-let height: number = 0;
+let width = 0;
+let height = 0;
 let px;
 let edgeLength;
 let arc1;
@@ -31,7 +32,8 @@ export const preload = (p5): void => {
   });
 };
 
-export const setup = (p, canvasParentRef: Element): void => {
+export const setup = (p5, canvasParentRef: Element): void => {
+  p = p5;
   width = p.windowWidth;
   height = p.windowHeight;
   let size = width >= height ? height : width;
@@ -60,7 +62,8 @@ export const setup = (p, canvasParentRef: Element): void => {
   // arc1.mouseOver();
 };
 
-export const windowResized = (p): void => {
+export const windowResized = (p5): void => {
+  p = p5;
   width = p.windowWidth;
   height = p.windowHeight;
   let size = width >= height ? height : width;
@@ -69,7 +72,8 @@ export const windowResized = (p): void => {
   canvas = p.resizeCanvas(width, height);
 };
 
-export const keyPressed = (p, e) => {
+export const keyPressed = (p5, e) => {
+  p = p5;
   if (e.keyCode == 32) {
     e.preventDefault();
     p.fullscreen();
@@ -77,7 +81,8 @@ export const keyPressed = (p, e) => {
   handlePause();
 };
 
-export const mouseClicked = (p, e) => {
+export const mouseClicked = (p5, e) => {
+  p = p5;
   if (!started) {
     context = new AudioContext();
     started = true;
@@ -85,21 +90,24 @@ export const mouseClicked = (p, e) => {
 };
 
 const handlePause = () => {
-  if (paused) {
-    context.resume().then(() => {
-      songs[songNum].play();
-      console.log("play");
-      p.loop();
-    });
-  } else {
-    songs[songNum].pause();
-    console.log("pause");
-    p.noLoop();
+  if (songs) {
+    if (paused) {
+      context.resume().then(() => {
+        songs[songNum].play();
+        console.log("play");
+        p.loop();
+      });
+    } else {
+      songs[songNum].pause();
+      console.log("pause");
+      p.noLoop();
+    }
   }
   paused = !paused;
 };
 
-export const draw = (p): void => {
+export const draw = (p5): void => {
+  p = p5;
   p.background(0);
   p.translate(width / 2, height / 2);
   p.imageMode(p.CENTER);

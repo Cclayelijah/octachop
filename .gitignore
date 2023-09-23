@@ -3,3 +3,4 @@ node_modules
 **/DS-Store
 yarn-error.log
 .env
+.env.local
