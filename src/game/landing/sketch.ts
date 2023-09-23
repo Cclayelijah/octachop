@@ -74,14 +74,14 @@ export const keyPressed = (p, e) => {
     e.preventDefault();
     p.fullscreen();
   }
+  handlePause();
 };
 
-export const mouseClicked = (p) => {
+export const mouseClicked = (p, e) => {
   if (!started) {
     context = new AudioContext();
     started = true;
   }
-  handlePause();
 };
 
 const handlePause = () => {
@@ -161,6 +161,7 @@ export const draw = (p): void => {
   }
   if (canvas) canvas.drawingContext.shadowBlur = 0 * px;
 
+  if (paused) return;
   let particle = new Particle(px, edgeLength, p, canvas);
   particles.push(particle);
   for (let i = particles.length - 1; i >= 0; i--) {

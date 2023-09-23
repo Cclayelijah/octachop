@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { procedure, router } from "../trpc";
 
-export const trackRouter = router({
+const trackRouter = router({
   hello: procedure
     .input(
       z.object({

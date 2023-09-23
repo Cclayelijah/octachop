@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { procedure, router } from "../trpc";
+import { procedure, middleware, router } from "../trpc";
 
 export const appRouter = router({
   hello: procedure
@@ -11,6 +11,31 @@ export const appRouter = router({
     .query(({ input }) => {
       return {
         greeting: `hello ${input.text}`,
+      };
+    }),
+  convertTrack: procedure
+    .input(z.object({ file: z.any() }))
+    .query(({ file }) => {
+      console.log(file);
+      return {
+        title: "Marble Soda",
+        difficulty: 5.09,
+        approachRate: 9,
+        notes: [
+          {
+            path: 0,
+            time: 1168,
+            type: 6,
+            hitSound: 0,
+          },
+        ],
+        breaks: [
+          {
+            startTime: 23867,
+            endTime: 28782,
+          },
+        ],
+        bgImage: "MarbleSodaBG.jpg",
       };
     }),
 });

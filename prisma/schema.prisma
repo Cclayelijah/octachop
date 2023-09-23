@@ -34,8 +34,10 @@ model TrackSet {
   artist        String   @db.VarChar(255)
   artistUnicode String   @db.VarChar(255) @map("artist_unicode")
   audio         String
+  duration      Int
   beatmapSetId  Int      @unique @map("beatmap_set_id")
-  imageDir      String   @map("image_dir")
+  imageDir      String   @map("image_directory")
+  defaultImage  String   @map("default_image")
   tracks        Track[]
 
   @@map("track_set")

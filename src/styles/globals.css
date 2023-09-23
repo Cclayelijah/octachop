@@ -100,13 +100,14 @@ nav {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
+  color: #fff;
+  background-color: #333;
+  /* background: linear-gradient(
       to bottom,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
 }
 
 a {
@@ -117,5 +118,16 @@ a {
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
+  }
+}
+
+.cornerButton:hover {
+  width: 100px;
+  height: 50px;
+}
+
+@media only screen and (max-width: 768px) {
+  .mobileStack {
+    flex-direction: column !important;
   }
 }
