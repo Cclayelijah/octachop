@@ -17,6 +17,10 @@
     "baseUrl": ".",
     "incremental": true
   },
-  "exclude": ["node_modules", ".next", "out"],
+  "typeRoots": [
+    "./typings",
+    "./node_modules/@types/"
+  ],
+  "exclude": ["node_modules", ".next", "out", "**/*sketch.js"],
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js"]
 }

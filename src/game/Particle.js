@@ -1,7 +1,4 @@
-// import { Vector } from "p5";
-import type p5Types from "p5";
-
-let px: number = 0;
+let px = 0;
 let p;
 let canvas;
 export class Particle {
@@ -12,7 +9,7 @@ export class Particle {
   color;
   static edgeLength;
 
-  constructor(pixel, edgeLength, p5: p5Types, c) {
+  constructor(pixel, edgeLength, p5, c) {
     canvas = c;
     p = p5;
     px = pixel;

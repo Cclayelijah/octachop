@@ -15,11 +15,10 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import PageHeading from "../../PageHeading";
 import Panel from "../../Panel";
 import { BodyContainer } from "../../styles";
-import { trpc } from "src/pages/_app";
 import TrackInfo from "./TrackInfo";
 
 type Props = {};

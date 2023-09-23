@@ -16,11 +16,10 @@ import {
   SLICE_COLOR,
   TRACK_NAME,
 } from "src/game/Settings";
-import type p5Types from "p5";
 import { handleStart } from ".";
 
 // global.p5.disableFriendlyErrors = true; // disables FES to boost performance
-let p: p5Types;
+let p;
 let canvas;
 let context;
 let started = false;
@@ -117,7 +116,7 @@ let opad,
   star,
   warningSign;
 
-export const preload = (p5): void => {
+export const preload = (p5) => {
   myFont = p5.loadFont("res/Inconsolata-Regular.ttf");
   // sound
   p5.soundFormats("mp3", "ogg", "wav");
@@ -166,7 +165,7 @@ export const preload = (p5): void => {
   warningSign = p5.loadImage("res/images/warning-sign.png");
 };
 
-export const setup = (p5, canvasParentRef: Element): void => {
+export const setup = (p5, canvasParentRef) => {
   p = p5;
   width = p.windowWidth;
   height = p.windowHeight;
@@ -226,7 +225,7 @@ export const setup = (p5, canvasParentRef: Element): void => {
   }
 };
 
-export const windowResized = (p5): void => {
+export const windowResized = (p5) => {
   p = p5;
   width = p.windowWidth;
   height = p.windowHeight;
@@ -689,7 +688,7 @@ function displayResults() {
   p.text(track.difficulty, width - 90 * px, 110 * px);
 }
 
-export const draw = (p): void => {
+export const draw = (p) => {
   if (notesFinished && songEnded) {
     p.clear();
     displayResults();
