@@ -9,7 +9,6 @@ import {
   setup,
   windowResized,
 } from "./sketch";
-import { trpc } from "src/utils/trpc";
 import {
   Button,
   Checkbox,
@@ -46,18 +45,18 @@ const Sketch = dynamic(
 );
 
 const Landing: FC = () => {
-  const [loggingIn, setLoggingIn] = useState(false);
-  const [authenticating, setAuthenticating] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  // const [loggingIn, setLoggingIn] = useState(false);
+  // const [authenticating, setAuthenticating] = useState(false);
+  // const [username, setUsername] = useState("");
+  // const [password, setPassword] = useState("");
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    console.log("username:" + username);
-    console.log("password:" + password);
-    setLoggingIn(false);
-    setAuthenticating(true);
-  };
+  // const handleLogin = (e) => {
+  //   e.preventDefault();
+  //   console.log("username:" + username);
+  //   console.log("password:" + password);
+  //   setLoggingIn(false);
+  //   setAuthenticating(true);
+  // };
 
   return (
     <Box>

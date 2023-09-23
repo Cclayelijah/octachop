@@ -7,6 +7,7 @@ let p;
 let canvas;
 let context;
 let started = false;
+let contextStarted = false;
 let paused = true;
 let songs = [];
 let songNum;
@@ -74,18 +75,24 @@ export const windowResized = (p5): void => {
 
 export const keyPressed = (p5, e) => {
   p = p5;
-  if (e.keyCode == 32) {
-    e.preventDefault();
-    p.fullscreen();
+  if (!contextStarted) {
+    context = new AudioContext();
+    contextStarted = true;
   }
-  handlePause();
+  if (!started) {
+    started = true;
+  }
+  if (e.keyCode === 32) {
+    e.preventDefault();
+    handlePause();
+  }
 };
 
 export const mouseClicked = (p5, e) => {
   p = p5;
-  if (!started) {
+  if (!contextStarted) {
     context = new AudioContext();
-    started = true;
+    contextStarted = true;
   }
 };
 
@@ -109,75 +116,83 @@ const handlePause = () => {
 export const draw = (p5): void => {
   p = p5;
   p.background(0);
-  p.translate(width / 2, height / 2);
-  p.imageMode(p.CENTER);
   p.rectMode(p.CENTER);
+  
+  if (started) {
+    p.translate(width / 2, height / 2);
+    p.imageMode(p.CENTER);
 
-  fft.analyze();
-  let amp = fft.getEnergy(20, 200);
-  p.push();
-  if (amp > 200) {
-    p.rotate(p.random(-0.5, 0.5));
-  }
-  p.image(
-    bg[songNum],
-    0,
-    0,
-    width + 20 + p.map(amp, 0, 240, 0, width / 8),
-    height + 20 + p.map(amp, 0, 240, 0, height / 8)
-  );
-  // slice options
-  p.rotate(amp / 20);
-  p.stroke(190, 183, 223);
-  // p.fill(255, 150);
-  let alpha = p.map(amp, 240, 0, 120, 30);
-  // p.fill(0, 100);
-  p.fill(0, alpha);
-  arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
-  arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
-  arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
-  p.fill(0);
-  // p.noStroke();
-  p.ellipse(0, 0, p.map(amp, 0, 250, 10 * px, 24 * px) + (amp > 210 ? 4 : 0));
-  p.pop();
-  // dark filter
-  // p.fill(0, alpha);
-  // p.noStroke();
-  // p.rect(0, 0, width, height);
-
-  // p.fill(0, alpha);
-  p.fill(0, 100);
-  p.stroke(255);
-  p.strokeWeight(3);
-  let wave = fft.waveform();
-  if (canvas) canvas.drawingContext.shadowColor = "black";
-  if (canvas) canvas.drawingContext.shadowBlur = 100 * px;
-  for (let t = -1; t <= 1; t += 2) {
-    p.beginShape();
-    for (let i = 0; i < width; i += 0.5) {
-      let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
-
-      let r =
-        p.map(wave[index], -1, 1, 30 * px, edgeLength * 2 - 50 * px) *
-        (1 - volume) *
-        10;
-      let x = r * p.sin(i) * t * 1.2 * px;
-      let y = r * p.cos(i) * 1.2 * px;
-      p.vertex(x, y);
+    fft.analyze();
+    let amp = fft.getEnergy(20, 200);
+    p.push();
+    if (amp > 200) {
+      p.rotate(p.random(-0.5, 0.5));
     }
-    p.endShape();
-  }
-  if (canvas) canvas.drawingContext.shadowBlur = 0 * px;
+    p.image(
+      bg[songNum],
+      0,
+      0,
+      width + 20 + p.map(amp, 0, 240, 0, width / 8),
+      height + 20 + p.map(amp, 0, 240, 0, height / 8)
+    );
+    // slice options
+    p.rotate(amp / 20);
+    p.stroke(190, 183, 223);
+    // p.fill(255, 150);
+    let alpha = p.map(amp, 240, 0, 120, 30);
+    // p.fill(0, 100);
+    p.fill(0, alpha);
+    arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+    arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+    arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+    p.fill(0);
+    // p.noStroke();
+    p.ellipse(0, 0, p.map(amp, 0, 250, 10 * px, 24 * px) + (amp > 210 ? 4 : 0));
+    p.pop();
+    // dark filter
+    // p.fill(0, alpha);
+    // p.noStroke();
+    // p.rect(0, 0, width, height);
 
-  if (paused) return;
-  let particle = new Particle(px, edgeLength, p, canvas);
-  particles.push(particle);
-  for (let i = particles.length - 1; i >= 0; i--) {
-    if (particles[i].edges()) {
-      particles.splice(i, 1);
-    } else {
-      particles[i].update(amp > 210);
-      particles[i].show(p);
+    // p.fill(0, alpha);
+    p.fill(0, 100);
+    p.stroke(255);
+    p.strokeWeight(3);
+    let wave = fft.waveform();
+    if (canvas) canvas.drawingContext.shadowColor = "black";
+    if (canvas) canvas.drawingContext.shadowBlur = 100 * px;
+    for (let t = -1; t <= 1; t += 2) {
+      p.beginShape();
+      for (let i = 0; i < width; i += 0.5) {
+        let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
+
+        let r =
+          p.map(wave[index], -1, 1, 30 * px, edgeLength * 2 - 50 * px) *
+          (1 - volume) *
+          10;
+        let x = r * p.sin(i) * t * 1.2 * px;
+        let y = r * p.cos(i) * 1.2 * px;
+        p.vertex(x, y);
+      }
+      p.endShape();
     }
+    if (canvas) canvas.drawingContext.shadowBlur = 0 * px;
+
+    if (paused) return;
+    let particle = new Particle(px, edgeLength, p, canvas);
+    particles.push(particle);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      if (particles[i].edges()) {
+        particles.splice(i, 1);
+      } else {
+        particles[i].update(amp > 210);
+        particles[i].show(p);
+      }
+    }
+  } else {
+    p.textSize(32);
+    p.textAlign(p.CENTER);
+    p.fill(0, 102, 153);
+    p.text('Press [space] to play music.', width / 2, height / 2);
   }
 };

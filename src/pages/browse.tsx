@@ -1,6 +1,7 @@
 import Browse from "src/game/browse";
 import Head from "next/head";
 
+
 export const BrowsePage = (): JSX.Element => (
   <>
     <div>

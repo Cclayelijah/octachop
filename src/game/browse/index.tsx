@@ -226,7 +226,7 @@ const Browse: FC = () => {
                 })}
             </Box>
             <div>
-              <Link href={"/"}>
+              <Link href={"/"} prefetch={false}>
                 <Image
                   className="cornerButton"
                   src={"/images/arrow-back.png"}

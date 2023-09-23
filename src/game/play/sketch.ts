@@ -398,7 +398,17 @@ export const keyPressed = (p5, e) => {
     e.preventDefault();
     if (notesFinished) {
       endSong();
-    } else paused ? play() : pause();
+    } else {
+      if (context == undefined) {
+        context = new AudioContext();
+      }
+      if (!started) {
+        handleStart();
+      } else {
+        context.resume();
+        paused ? play() : pause();
+      }
+    }
     return false; // prevent scroll
   }
   if (p5.keyCode === 13) {
@@ -714,6 +724,7 @@ export const draw = (p): void => {
   if (ANALYZE_AUDIO) {
     p.pop();
   }
+
   p.translate(-width / 2, -half);
   // dark filter
   let alpha =
@@ -894,6 +905,7 @@ export const draw = (p): void => {
     console.log(e);
     pause();
   }
+
   // particles
   if (fps > 30 && SHOW_PARTICLES && ANALYZE_AUDIO) {
     let p1 = new Particle(px, edgeLength, p, canvas);
@@ -948,5 +960,13 @@ export const draw = (p): void => {
         ? p.map(amp, 0, 250, 8 * px, 16 * px) + (amp > 210 ? 2 : 0)
         : 10 * px
     );
+  }
+
+  if (!started) {
+    p.textSize(18);
+    p.textAlign(p.CENTER);
+    // p.fill(0, 102, 153);
+    p.fill(255);
+    p.text('Press [space] to start.', width / 2, height / 2 - 30 * px);
   }
 };
