@@ -1,8 +1,9 @@
 import styled from "@emotion/styled";
 import { Box, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";
+import duration from 'dayjs/plugin/duration' // import plugin
 import React, { useEffect, useState } from "react";
-var duration = require("dayjs/plugin/duration");
+dayjs().format();
 dayjs.extend(duration);
 
 type Props = {

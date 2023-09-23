@@ -1,4 +1,3 @@
-import type p5Types from "p5";
 import { Particle } from "../Particle";
 import { songTracks } from "./constants";
 
@@ -24,7 +23,7 @@ let arc1;
 let arc2;
 let arc3;
 
-export const preload = (p5): void => {
+export const preload = (p5) => {
   p = p5;
   p5.soundFormats("mp3", "wav", "ogg");
   songTracks.forEach((song) => {
@@ -33,7 +32,7 @@ export const preload = (p5): void => {
   });
 };
 
-export const setup = (p5, canvasParentRef: Element): void => {
+export const setup = (p5, canvasParentRef) => {
   p = p5;
   width = p.windowWidth;
   height = p.windowHeight;
@@ -63,7 +62,7 @@ export const setup = (p5, canvasParentRef: Element): void => {
   // arc1.mouseOver();
 };
 
-export const windowResized = (p5): void => {
+export const windowResized = (p5) => {
   p = p5;
   width = p.windowWidth;
   height = p.windowHeight;
@@ -113,7 +112,7 @@ const handlePause = () => {
   paused = !paused;
 };
 
-export const draw = (p5): void => {
+export const draw = (p5) => {
   p = p5;
   p.background(0);
   p.rectMode(p.CENTER);
