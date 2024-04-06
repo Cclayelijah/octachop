@@ -175,7 +175,7 @@ export default function AddTrackSet({}: Props) {
       artist: songArtist,
       artistUnicode: songArtistUnicode
     }
-    const response = await fetch('http://localhost:3000/api/song', {
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/song', {
       method: "POST",
       mode: "cors",
       headers: {

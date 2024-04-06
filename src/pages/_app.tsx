@@ -13,6 +13,7 @@ import {
   SignedOut,
 } from "@clerk/nextjs";
 import { useRouter } from "next/router";
+import ErrorBoundary from "src/components/ErrorBoundary";
 
 const theme = createTheme({
   palette: {
@@ -36,20 +37,22 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <ThemeProvider theme={theme}>
       <GoogleAnalytics trackPageViews />
-      <ClerkProvider>
-        {isPublicPage ? (
-          <Component {...pageProps} />
-        ) : (
-          <>
-            <SignedIn>
-              <Component {...pageProps} />
-            </SignedIn>
-            <SignedOut>
-              <RedirectToSignIn />
-            </SignedOut>
-          </>
-        )}
+      <ErrorBoundary>
+        <ClerkProvider>
+          {isPublicPage ? (
+            <Component {...pageProps} />
+          ) : (
+            <>
+              <SignedIn>
+                <Component {...pageProps} />
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          )}
       </ClerkProvider>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 };
