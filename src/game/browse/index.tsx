@@ -1,6 +1,6 @@
 import { Box, Divider, Stack, Typography } from "@mui/material";
 import { FC, useState } from "react";
-import { WithUser } from "@clerk/nextjs";
+import { UserButton, WithUser } from "@clerk/nextjs";
 import TrackSet from "./TrackSet";
 import { Row, Col } from "react-simple-flex-grid";
 import "react-simple-flex-grid/lib/main.css";
@@ -39,7 +39,8 @@ const Browse: FC = () => {
       {(user) => (
         <Box display="flex">
           <Stack flex={1} padding={2}>
-            <Box display="flex">
+            <Box display="flex gap-4">
+              {/* <UserButton showName /> */}
               <Typography variant="h6">
                 {user.firstName ? user.firstName : "Guest"}
               </Typography>
