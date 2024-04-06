@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { AdminRoute } from "./utils";
-import { WithUser } from "@clerk/nextjs";
+import { RedirectToUserProfile, WithUser } from "@clerk/nextjs";
 import { grey } from "@mui/material/colors";
 import { useRouter } from "next/router";
 
@@ -64,9 +64,11 @@ export default function Panel({}: Props) {
                 <Typography variant="subtitle2" marginBottom={0} color={"#999"}>
                   Signed in as
                 </Typography>
-                <Typography>{`${user.firstName} ${
+                <Link href="/user">
+                  <Typography>{`${user.firstName} ${
                   user.lastName ? user.lastName : ""
-                }`}</Typography>
+                  }`}</Typography>
+                </Link>
               </Stack>
             </Box>
           </Nav>

@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserType {
+  userTypeName String @unique
+  userTypeDesc String
+  User         User[]
+}
+
+model User {
+  userId        Int          @id @unique @default(autoincrement())
+  userTypeName  String
+  totalPlayTime Int
+  exp           Int
+  pp            Int
+  Auth          Auth[]
+  PassResult    PassResult[]
+  userType      UserType     @relation(fields: [userTypeName], references: [userTypeName])
+}
+
+model Auth {
+  authId   Int    @id @unique @default(autoincrement())
+  userId   Int
+  email    String
+  password String
+  phone    String
+  userName String @unique
+  user     User   @relation(fields: [userId], references: [userId])
+}
+
+model Song {
+  songId        Int     @id @default(autoincrement())
+  beatmapSetId  Int     @unique
+  songUrl       String
+  defaultImg    String
+  title         String
+  titleUnicode  String
+  artist        String
+  artistUnicode String
+  active        Boolean @default(true)
+  levels        Level[] 
+}
+
+model Level {
+  levelId      Int          @id @default(autoincrement())
+  songId       Int
+  beatmapId    Int          @unique
+  difficulty   Decimal
+  image        String
+  approachRate Decimal
+  noteData     Json[]
+  breakData    Json[]
+  beatmapUrl   String
+  active     Boolean      @default(true)
+  song        Song         @relation(fields: [songId], references: [songId], onDelete: Cascade)
+  passResult   PassResult[]
+}
+
+model PassResult {
+  passResultId  Int   @id @unique @default(autoincrement())
+  userId        Int
+  levelId       Int
+  timestamp     Int
+  score         Int   @default(0)
+  hits          Int   @default(0)
+  misses        Int   @default(0)
+  healthBarData Int   @default(0)
+  replayData    Int
+  level         Level @relation(fields: [levelId], references: [levelId])
+  user          User  @relation(fields: [userId], references: [userId])
+}
