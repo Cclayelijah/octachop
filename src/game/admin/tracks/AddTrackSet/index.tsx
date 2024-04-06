@@ -24,9 +24,9 @@ import { createClient } from "@supabase/supabase-js";
 import { any } from "zod";
 import extractData from "src/game/extractData";
 
-const supabaseurl = process.env.SUPABASE_URL ?? ""
-const supabasekey = process.env.SUPABASE_KEY ?? ""
-const supabase = createClient('https://mzvkxfaggqbdhudnwxqc.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16dmt4ZmFnZ3FiZGh1ZG53eHFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzU2MzU5NDgsImV4cCI6MTk5MTIxMTk0OH0.KKyF_AG_673jbl4paQhJMjujo47_dltC_U6iRhEHWyk');
+const supabaseurl:string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+const supabasekey:string = process.env.NEXT_PUBLIC_SUPABASE_KEY ?? ""
+const supabase = createClient(supabaseurl, supabasekey);
 
 type Props = {};
 type MyImage = {
