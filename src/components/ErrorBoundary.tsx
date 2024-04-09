@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 class ErrorBoundary extends React.Component<any, any> {
@@ -21,7 +22,7 @@ class ErrorBoundary extends React.Component<any, any> {
         // You can render any custom fallback UI
         return <>
         <h1>Something went wrong.</h1>
-        <p>Please Contact Elijah in the <a href="https://discord.gg/ktTeZJsj47" target="_blank">discord server</a> (PolarEyes) to report the issue.</p>
+        <p>Please Contact Elijah in the <Link href="https://discord.gg/ktTeZJsj47" target="_blank">discord server</Link> (PolarEyes) to report the issue.</p>
         </>
       }
   
