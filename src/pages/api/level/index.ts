@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 // /api/level
 // Required fields in body: beatmapId, difficulty, image,  approachRate,  noteData, breakData, beatmapUrl
 // Optional fields in body: 
-export default async function handle(
+export async function handle(
     req: NextApiRequest,
     res: NextApiResponse,
   ) {

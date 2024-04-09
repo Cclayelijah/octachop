@@ -28,7 +28,7 @@ type Level = {
     active?: boolean
   }
 
-export default async function handle(
+export async function handle(
     req: NextApiRequest,
     res: NextApiResponse,
   ) {
