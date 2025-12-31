@@ -24,6 +24,7 @@ let p;
 let canvas;
 let context;
 let started = false;
+let volume = 0.5; // Volume control variable
 let width = 0;
 let height = 0;
 let size;
@@ -71,6 +72,13 @@ let landed;
 let dateTime;
 let fft;
 let amp;
+
+// Volume display variables
+let showVolumeDisplay = false;
+let volumeDisplayTimer = 0;
+let volumeDisplayDuration = 2000; // Show for 2 seconds
+let mouseX = 0;
+let mouseY = 0;
 
 // sound files
 let song,
@@ -194,13 +202,12 @@ export const setup = (p5, canvasParentRef) => {
     fft = new global.p5.FFT();
     fft.setInput(song);
   }
-  hitNormal.setVolume(0.5);
-  hitWhistle.setVolume(0.5);
-  hitFinish.setVolume(0.5);
-  hitClap.setVolume(0.5);
-  song.setVolume(0.5);
+  hitNormal.setVolume(volume);
+  hitWhistle.setVolume(volume);
+  hitFinish.setVolume(volume);
+  hitClap.setVolume(volume);
+  song.setVolume(volume);
 
-  p.noCursor();
   p.textFont(myFont);
   p.textSize(24);
 
@@ -312,7 +319,6 @@ export function start(data) {
 }
 
 function retry() {
-  p.noCursor();
   btnRetry.hide();
   numAttempts++;
   notes = JSON.parse(noteData);
@@ -345,7 +351,6 @@ function play() {
   paused = false;
   console.log("play");
   p.loop();
-  p.noCursor();
 }
 
 function pause() {
@@ -353,7 +358,6 @@ function pause() {
   paused = true;
   console.log("pause");
   p.noLoop();
-  p.cursor(p.ARROW);
 }
 
 function playSound(hitSound) {
@@ -461,6 +465,57 @@ export const mouseClicked = (p) => {
   } else {
     context.resume();
   }
+};
+
+export const mouseWheel = (p5, event) => {
+  p = p5;
+  
+  // Only handle scroll if this is the active sketch
+  if (!canHandleKeyPress('play')) {
+    return;
+  }
+
+  // Update mouse position for volume display
+  mouseX = p5.mouseX;
+  mouseY = p5.mouseY;
+  
+  // Adjust volume based on scroll direction (much smaller increments for gradual change)
+  const scrollSensitivity = 0.002; // Much smaller - now requires ~50 scroll units to go from 0 to 1
+  const deltaY = event.delta || event.deltaY || 0;
+  
+  // Normalize scroll delta (different browsers/devices have different scales)
+  let normalizedDelta = deltaY;
+  if (Math.abs(deltaY) > 10) {
+    // Large deltas (like from trackpad), scale them down
+    normalizedDelta = deltaY / 10;
+  }
+  
+  // Scroll down = decrease volume, scroll up = increase volume
+  const volumeChange = normalizedDelta * scrollSensitivity;
+  const oldVolume = volume;
+  volume = p.constrain(volume - volumeChange, 0, 1);
+  
+  console.log('Play sketch - Volume changed from', oldVolume, 'to', volume);
+  
+  // Update volume for all audio sources
+  if (song) song.setVolume(volume);
+  if (hitNormal) hitNormal.setVolume(volume);
+  if (hitWhistle) hitWhistle.setVolume(volume);
+  if (hitFinish) hitFinish.setVolume(volume);
+  if (hitClap) hitClap.setVolume(volume);
+  
+  // Show volume display
+  showVolumeDisplay = true;
+  volumeDisplayTimer = p.millis();
+  
+  // Ensure the sketch is looping so the volume display can update (especially when paused)
+  p.loop();
+  
+  // Prevent default scroll behavior
+  if (event.preventDefault) {
+    event.preventDefault();
+  }
+  return false;
 };
 
 const activeSlice = () => {
@@ -611,7 +666,6 @@ const flashGetReady = (endTime) => {
 
 function displayResults() {
   p.noLoop();
-  p.cursor(p.ARROW);
   dateTime = new Date();
   endingCredits.play();
   applause.play();
@@ -993,5 +1047,61 @@ export const draw = (p) => {
     // p.fill(0, 102, 153);
     p.fill(255);
     p.text('Press [space] to start.', width / 2, height / 2 - 30 * px);
+  }
+  
+  // Draw volume display if active
+  drawVolumeDisplay(p);
+};
+
+// Elegant volume display function - simple pie chart that follows mouse
+const drawVolumeDisplay = (p5) => {
+  p = p5;
+  
+  // Check if we should show the volume display
+  if (showVolumeDisplay && (p.millis() - volumeDisplayTimer < volumeDisplayDuration)) {
+    p.push();
+    
+    // Don't apply the main transformation for the volume display
+    p.resetMatrix();
+    
+    // Update mouse position to follow current mouse location
+    mouseX = p5.mouseX;
+    mouseY = p5.mouseY;
+    
+    // Calculate fade out effect
+    const timeElapsed = p.millis() - volumeDisplayTimer;
+    const fadeStart = volumeDisplayDuration * 0.5; // Start fading at 50% of duration
+    let alpha = 255;
+    if (timeElapsed > fadeStart) {
+      alpha = p.map(timeElapsed, fadeStart, volumeDisplayDuration, 255, 0);
+    }
+    
+    // Volume display properties - much smaller, like the old center circle
+    const displaySize = 24 * px; // Much smaller - about the size of the old center circle
+    const strokeWidth = 4 * px; // Thickness of the donut
+    
+    // Subtle glow effect
+    p.drawingContext.shadowColor = `rgba(190, 183, 223, ${alpha / 255 * 0.8})`;
+    p.drawingContext.shadowBlur = 8 * px;
+    
+    // Volume donut arc - hollow with rounded edges
+    if (volume > 0) {
+      p.noFill();
+      p.stroke(190, 183, 223, alpha); // Purple stroke
+      p.strokeWeight(strokeWidth);
+      p.strokeCap(p.ROUND); // Rounded edges
+      // Map volume to 0-TWO_PI radians (play sketch uses default RADIANS mode)
+      const volumeAngle = p.map(volume, 0, 1, 0, p.TWO_PI);
+      // Start from top (-HALF_PI) and draw clockwise
+      p.arc(mouseX, mouseY, displaySize, displaySize, -p.HALF_PI, -p.HALF_PI + volumeAngle);
+    }
+    
+    // Reset shadow
+    p.drawingContext.shadowBlur = 0;
+    
+    p.pop();
+  } else if (showVolumeDisplay && (p.millis() - volumeDisplayTimer >= volumeDisplayDuration)) {
+    // Hide the volume display after duration
+    showVolumeDisplay = false;
   }
 };

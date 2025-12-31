@@ -96,6 +96,15 @@ const Landing: FC = () => {
           </Link>
         </Box>
       </Box>
+      <style jsx>{`
+        :global(*) {
+          cursor: url('/cursor/white-7.png') 7 7, auto !important;
+        }
+        :global(canvas) {
+          cursor: url('/cursor/white-7.png') 7 7, auto !important;
+          cursor: -webkit-image-set(url('/cursor/white-7.png') 1x) 7 7, auto !important;
+        }
+      `}</style>
       <Sketch
         preload={preload}
         setup={setup}
