@@ -17,6 +17,7 @@ import {
   TRACK_NAME,
 } from "src/game/Settings";
 import { handleStart } from ".";
+import { canHandleKeyPress } from "../lib/sketchManager";
 
 // global.p5.disableFriendlyErrors = true; // disables FES to boost performance
 let p;
@@ -295,7 +296,17 @@ export function start(data) {
   song.onended(() => {
     if (!paused) songEnded = true;
   });
+  
+  // Ensure AudioContext is created and resumed
+  if (context == undefined) {
+    context = new AudioContext();
+  }
+  
   context.resume().then(() => {
+    song.play(DELAY_START);
+  }).catch((error) => {
+    console.warn('AudioContext resume failed:', error);
+    // Fallback: try to play without context resume
     song.play(DELAY_START);
   });
 }
@@ -392,7 +403,20 @@ function endSong() {
 }
 
 export const keyPressed = (p5, e) => {
-  console.log(p5.keyCode);
+  // Use sketch manager to check if we can handle key press
+  if (!canHandleKeyPress('play', p5.keyCode)) {
+    console.log('Play sketch cannot handle keypress - blocked by sketch manager');
+    return;
+  }
+  
+  // Additional context checks
+  if (!song) {
+    console.log('Play sketch - no song available');
+    return;
+  }
+  
+  console.log('Play keyPressed:', p5.keyCode);
+  
   if (p5.keyCode === 32) {
     e.preventDefault();
     if (notesFinished) {
@@ -402,7 +426,9 @@ export const keyPressed = (p5, e) => {
         context = new AudioContext();
       }
       if (!started) {
+        console.log('Starting game...');
         handleStart();
+        // Don't execute play/pause logic when starting for the first time
       } else {
         context.resume();
         paused ? play() : pause();

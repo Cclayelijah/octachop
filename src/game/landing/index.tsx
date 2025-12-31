@@ -31,13 +31,16 @@ import Link from "next/link";
 import { clickCheck, handleClick } from "./utils";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
+import { loadP5Sound } from "../lib/p5SoundLoader";
+import { setActiveSketch } from "../lib/sketchManager";
 // Will only import `react-p5` on client-side
 const Sketch = dynamic(
   () =>
-    import("react-p5").then((mod) => {
-      // importing sound lib ONLY AFTER REACT-P5 is loaded
-      // require("p5/lib/addons/p5.sound");
-      require("../lib/p5.sound");
+    import("react-p5").then(async (mod) => {
+      // Set this as the active sketch
+      setActiveSketch('landing');
+      // Load p5.sound safely to prevent AudioWorklet duplicate registration
+      await loadP5Sound();
       // returning react-p5 default export
       return mod.default;
     }),
@@ -51,6 +54,14 @@ const Landing: FC = () => {
   // const [authenticating, setAuthenticating] = useState(false);
   // const [username, setUsername] = useState("");
   // const [password, setPassword] = useState("");
+
+  // Set as active when component mounts, cleanup when unmounts
+  useEffect(() => {
+    setActiveSketch('landing');
+    return () => {
+      setActiveSketch(null);
+    };
+  }, []);
 
   // const handleLogin = (e) => {
   //   e.preventDefault();

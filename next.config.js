@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  swcMinify: false, // Disable SWC minification - might be causing class transpilation issues
   
   // Vercel-specific optimizations
   experimental: {
@@ -34,6 +34,22 @@ const nextConfig = {
       config.externals = config.externals || [];
       config.externals.push('react-p5');
     }
+    
+    // More aggressive handling of react-p5 to prevent class transpilation issues
+    config.module.rules.push({
+      test: /node_modules\/react-p5/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: [
+            ['@babel/preset-env', { 
+              targets: { browsers: ['> 1%'] },
+              modules: false
+            }],
+          ],
+        },
+      },
+    });
     
     return config;
   },

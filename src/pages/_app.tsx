@@ -15,6 +15,8 @@ import {
 import { useRouter } from "next/router";
 import ErrorBoundary from "src/components/ErrorBoundary";
 import Head from "next/head";
+import { useEffect } from "react";
+import { resetP5Sound } from "src/game/lib/p5SoundLoader";
 
 const theme = createTheme({
   palette: {
@@ -34,6 +36,13 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   const publicPages: Array<string> = ["/", "/sign-in", "/sign-up"];
   const { pathname } = useRouter();
   const isPublicPage = publicPages.includes(pathname);
+
+  // Reset p5.sound state on hot reload in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      resetP5Sound();
+    }
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
