@@ -5,6 +5,7 @@ import {
   draw,
   keyPressed,
   mouseClicked,
+  mouseWheel,
   preload,
   setup,
   windowResized,
@@ -101,6 +102,7 @@ const Landing: FC = () => {
         draw={draw}
         windowResized={windowResized}
         mouseClicked={mouseClicked}
+        mouseWheel={mouseWheel}
         keyPressed={keyPressed}
       />
     </Box>

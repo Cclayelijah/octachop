@@ -11,7 +11,7 @@ let contextStarted = false;
 let paused = true;
 let songs = [];
 let songNum;
-let volume = 0.9;
+let volume = 0.5;
 let fft;
 let particles = [];
 let bg = [];
@@ -23,6 +23,13 @@ let edgeLength;
 let arc1;
 let arc2;
 let arc3;
+
+// Volume display variables
+let showVolumeDisplay = false;
+let volumeDisplayTimer = 0;
+let volumeDisplayDuration = 2000; // Show for 2 seconds
+let mouseX = 0;
+let mouseY = 0;
 
 export const preload = (p5) => {
   p = p5;
@@ -41,7 +48,14 @@ export const setup = (p5, canvasParentRef) => {
   px = size / 800;
   edgeLength = size / 4;
   canvas = p.createCanvas(width, height).parent(canvasParentRef);
-  songNum = Math.floor(Math.random() * songTracks.length) + 1; // random song
+  
+  // Safety check: ensure we have songs loaded
+  if (songs.length === 0) {
+    console.warn('No songs loaded in setup');
+    return;
+  }
+  
+  songNum = Math.floor(Math.random() * songTracks.length); 
   fft = new global.p5.FFT(0.2);
   fft.setInput(songs[songNum]);
   for (let i = 0; i < songs.length; i++) {
@@ -110,19 +124,77 @@ export const mouseClicked = (p5, e) => {
   }
 };
 
-const handlePause = () => {
-  if (songs) {
-    if (paused) {
-      context.resume().then(() => {
-        songs[songNum].play();
-        console.log("play");
-        p.loop();
-      });
-    } else {
-      songs[songNum].pause();
-      console.log("pause");
-      p.noLoop();
+export const mouseWheel = (p5, event) => {
+  p = p5;
+  
+  // Only handle scroll if this is the active sketch
+  if (!canHandleKeyPress('landing')) {
+    return;
+  }
+
+  // Update mouse position for volume display
+  mouseX = p5.mouseX;
+  mouseY = p5.mouseY;
+  
+  // Adjust volume based on scroll direction (much smaller increments for gradual change)
+  const scrollSensitivity = 0.002; // Much smaller - now requires ~50 scroll units to go from 0 to 1
+  const deltaY = event.delta || event.deltaY || 0;
+  
+  // Normalize scroll delta (different browsers/devices have different scales)
+  let normalizedDelta = deltaY;
+  if (Math.abs(deltaY) > 10) {
+    // Large deltas (like from trackpad), scale them down
+    normalizedDelta = deltaY / 10;
+  }
+  
+  // Scroll down = decrease volume, scroll up = increase volume
+  const volumeChange = normalizedDelta * scrollSensitivity;
+  const oldVolume = volume;
+  volume = p.constrain(volume - volumeChange, 0, 1);
+  
+  console.log('Scroll event - deltaY:', deltaY, 'normalizedDelta:', normalizedDelta, 'volumeChange:', volumeChange);
+  console.log('Volume changed from', oldVolume, 'to', volume);
+  
+  // Update volume for all songs
+  if (songs && songs.length > 0) {
+    for (let i = 0; i < songs.length; i++) {
+      songs[i].setVolume(volume);
     }
+  }
+  
+  // Show volume display
+  showVolumeDisplay = true;
+  volumeDisplayTimer = p.millis();
+  
+  // Ensure the sketch is looping so the volume display can update
+  if (!started || paused) {
+    p.loop();
+  }
+  
+  // Prevent default scroll behavior
+  if (event.preventDefault) {
+    event.preventDefault();
+  }
+  return false;
+};
+
+const handlePause = () => {
+  // Safety check: ensure we have valid songs and songNum
+  if (!songs || songs.length === 0 || songNum < 0 || songNum >= songs.length || !songs[songNum]) {
+    console.warn('Cannot handle pause: invalid songs or songNum', { songsLength: songs?.length, songNum });
+    return;
+  }
+  
+  if (paused) {
+    context.resume().then(() => {
+      songs[songNum].play();
+      console.log("play");
+      p.loop();
+    });
+  } else {
+    songs[songNum].pause();
+    console.log("pause");
+    p.noLoop();
   }
   paused = !paused;
 };
@@ -133,6 +205,12 @@ export const draw = (p5) => {
   p.rectMode(p.CENTER);
   
   if (started) {
+    // Safety check: ensure we have valid songNum and loaded assets
+    if (songNum < 0 || songNum >= bg.length || !bg[songNum]) {
+      console.warn('Invalid songNum or background not loaded:', songNum);
+      return;
+    }
+    
     p.translate(width / 2, height / 2);
     p.imageMode(p.CENTER);
 
@@ -181,9 +259,7 @@ export const draw = (p5) => {
         let index = p.floor(p.map(i, 0, 180, 0, wave.length - 1));
 
         let r =
-          p.map(wave[index], -1, 1, 30 * px, edgeLength * 2 - 50 * px) *
-          (1 - volume) *
-          10;
+          p.map(wave[index], -1, 1, 30 * px, edgeLength * 2 - 50 * px); // Removed volume dependency
         let x = r * p.sin(i) * t * 1.2 * px;
         let y = r * p.cos(i) * 1.2 * px;
         p.vertex(x, y);
@@ -208,5 +284,85 @@ export const draw = (p5) => {
     p.textAlign(p.CENTER);
     p.fill(0, 102, 153);
     p.text('Press [space] to play music.', width / 2, height / 2);
+  }
+  
+  // Draw volume display if active
+  drawVolumeDisplay(p5);
+};
+
+// Elegant volume display function - simple pie chart that follows mouse
+const drawVolumeDisplay = (p5) => {
+  p = p5;
+  
+  // Check if we should show the volume display
+  if (showVolumeDisplay && (p.millis() - volumeDisplayTimer < volumeDisplayDuration)) {
+    p.push();
+    
+    // Don't apply the main transformation for the volume display
+    p.resetMatrix();
+    
+    // Update mouse position to follow current mouse location
+    mouseX = p5.mouseX;
+    mouseY = p5.mouseY;
+    
+    // Calculate fade out effect
+    const timeElapsed = p.millis() - volumeDisplayTimer;
+    const fadeStart = volumeDisplayDuration * 0.5; // Start fading at 50% of duration
+    let alpha = 255;
+    if (timeElapsed > fadeStart) {
+      alpha = p.map(timeElapsed, fadeStart, volumeDisplayDuration, 255, 0);
+    }
+    
+    // Volume display properties
+    const displaySize = 80 * px; // Smaller, more elegant size
+    const volumePercent = Math.round(volume * 100);
+    
+    // Subtle glow effect
+    p.drawingContext.shadowColor = `rgba(190, 183, 223, ${alpha / 255 * 0.6})`;
+    p.drawingContext.shadowBlur = 15 * px;
+    
+    // Volume pie fill - draw this FIRST so it's behind the stroke
+    if (volume > 0) {
+      p.fill(190, 183, 223, alpha); // Purple fill
+      p.noStroke();
+      // Since we're in DEGREES mode, map volume to 0-360 degrees instead of radians
+      const volumeAngle = p.map(volume, 0, 1, 0, 360);
+      console.log('Drawing pie with volume:', volume, 'angle in degrees:', volumeAngle); // Debug
+      // Start from top (-90 degrees) and draw clockwise
+      p.arc(mouseX, mouseY, displaySize, displaySize, -90, -90 + volumeAngle, p.PIE);
+    } else {
+      console.log('Volume is 0, no pie fill'); // Debug
+    }
+    
+    // Background circle outline (draw OVER the pie for clean edge)
+    p.noFill();
+    p.stroke(120, 120, 120, alpha * 0.7); // More visible stroke
+    p.strokeWeight(2 * px); // Make stroke more visible
+    p.ellipse(mouseX, mouseY, displaySize, displaySize);
+    
+    // Clean center circle - make it smaller so we can see the pie behind it
+    p.fill(0, 0, 0, alpha);
+    p.noStroke();
+    p.ellipse(mouseX, mouseY, displaySize * 0.3, displaySize * 0.3); // Made smaller from 0.4 to 0.3
+    
+    // Volume percentage text in center
+    p.fill(255, 255, 255, alpha);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(14 * px);
+    p.textStyle(p.BOLD);
+    p.text(`${volumePercent}%`, mouseX, mouseY);
+    
+    // Reset shadow
+    p.drawingContext.shadowBlur = 0;
+    
+    p.pop();
+  } else if (showVolumeDisplay && (p.millis() - volumeDisplayTimer >= volumeDisplayDuration)) {
+    // Hide the volume display after duration
+    showVolumeDisplay = false;
+    
+    // If music was paused and not started, go back to paused state
+    if (paused && started) {
+      p.noLoop();
+    }
   }
 };
