@@ -1,6 +1,7 @@
 import { Particle } from "../Particle";
 import { songTracks } from "./constants";
 import { canHandleKeyPress } from "../lib/sketchManager";
+import { CURSOR_COLOR, CURSOR_SIZE } from "../Settings";
 
 
 let p;
@@ -30,6 +31,9 @@ let volumeDisplayTimer = 0;
 let volumeDisplayDuration = 2000; // Show for 2 seconds
 let mouseX = 0;
 let mouseY = 0;
+
+// Cursor tracking variables
+let posX, posY;
 
 export const preload = (p5) => {
   p = p5;
@@ -74,6 +78,10 @@ export const setup = (p5, canvasParentRef) => {
     });
   }
   p.angleMode(p.DEGREES);
+  
+  // Initialize cursor position
+  posX = width / 2;
+  posY = height / 2;
   // arc1.mouseOver();
 };
 
@@ -286,6 +294,18 @@ export const draw = (p5) => {
     p.text('Press [space] to play music.', width / 2, height / 2);
   }
   
+  // Update cursor position
+  posX = p.mouseX;
+  posY = p.mouseY;
+  
+  // Draw custom cursor line (like in play sketch)
+  p.push();
+  p.resetMatrix(); // Don't apply the main transformation for the cursor
+  p.strokeWeight(CURSOR_SIZE * px);
+  p.stroke(...CURSOR_COLOR);
+  p.line(posX, posY, p.pmouseX, p.pmouseY);
+  p.pop();
+  
   // Draw volume display if active
   drawVolumeDisplay(p5);
 };
@@ -313,44 +333,25 @@ const drawVolumeDisplay = (p5) => {
       alpha = p.map(timeElapsed, fadeStart, volumeDisplayDuration, 255, 0);
     }
     
-    // Volume display properties
-    const displaySize = 80 * px; // Smaller, more elegant size
-    const volumePercent = Math.round(volume * 100);
+    // Volume display properties - much smaller, like the old center circle
+    const displaySize = 24 * px; // Much smaller - about the size of the old center circle
+    const strokeWidth = 4 * px; // Thickness of the donut
     
     // Subtle glow effect
-    p.drawingContext.shadowColor = `rgba(190, 183, 223, ${alpha / 255 * 0.6})`;
-    p.drawingContext.shadowBlur = 15 * px;
+    p.drawingContext.shadowColor = `rgba(190, 183, 223, ${alpha / 255 * 0.8})`;
+    p.drawingContext.shadowBlur = 8 * px;
     
-    // Volume pie fill - draw this FIRST so it's behind the stroke
+    // Volume donut arc - hollow with rounded edges
     if (volume > 0) {
-      p.fill(190, 183, 223, alpha); // Purple fill
-      p.noStroke();
-      // Since we're in DEGREES mode, map volume to 0-360 degrees instead of radians
+      p.noFill();
+      p.stroke(190, 183, 223, alpha); // Purple stroke
+      p.strokeWeight(strokeWidth);
+      p.strokeCap(p.ROUND); // Rounded edges
+      // Since we're in DEGREES mode, map volume to 0-360 degrees
       const volumeAngle = p.map(volume, 0, 1, 0, 360);
-      console.log('Drawing pie with volume:', volume, 'angle in degrees:', volumeAngle); // Debug
-      // Start from top (-90 degrees) and draw clockwise
-      p.arc(mouseX, mouseY, displaySize, displaySize, -90, -90 + volumeAngle, p.PIE);
-    } else {
-      console.log('Volume is 0, no pie fill'); // Debug
+      // Start from top (-90 degrees) and draw clockwise - no p.PIE mode for stroke arcs
+      p.arc(mouseX, mouseY, displaySize, displaySize, -90, -90 + volumeAngle);
     }
-    
-    // Background circle outline (draw OVER the pie for clean edge)
-    p.noFill();
-    p.stroke(120, 120, 120, alpha * 0.7); // More visible stroke
-    p.strokeWeight(2 * px); // Make stroke more visible
-    p.ellipse(mouseX, mouseY, displaySize, displaySize);
-    
-    // Clean center circle - make it smaller so we can see the pie behind it
-    p.fill(0, 0, 0, alpha);
-    p.noStroke();
-    p.ellipse(mouseX, mouseY, displaySize * 0.3, displaySize * 0.3); // Made smaller from 0.4 to 0.3
-    
-    // Volume percentage text in center
-    p.fill(255, 255, 255, alpha);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.textSize(14 * px);
-    p.textStyle(p.BOLD);
-    p.text(`${volumePercent}%`, mouseX, mouseY);
     
     // Reset shadow
     p.drawingContext.shadowBlur = 0;
