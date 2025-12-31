@@ -29,11 +29,14 @@ const nextConfig = {
       type: 'asset/resource',
     });
     
+    // Skip parsing problematic modules during server-side build
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('react-p5');
+    }
+    
     return config;
   },
-  
-  // Transpile problematic packages
-  transpilePackages: ['react-p5'],
   
   // Image optimization
   images: {
@@ -43,11 +46,6 @@ const nextConfig = {
   
   // Output configuration for static exports (if needed)
   trailingSlash: false,
-  
-  // Environment variables
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
-  },
 };
 
 module.exports = nextConfig;
