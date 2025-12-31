@@ -1,5 +1,6 @@
 // @ts-nocheck
 import type { FC } from "react";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   doubleClicked,
@@ -11,12 +12,16 @@ import {
   start,
   windowResized,
 } from "./sketch";
+import { loadP5Sound } from "../lib/p5SoundLoader";
+import { setActiveSketch } from "../lib/sketchManager";
 // Will only import `react-p5` on client-side
 const Sketch = dynamic(
   () =>
-    import("react-p5").then((mod) => {
-      // importing sound lib ONLY AFTER REACT-P5 is loaded
-      require("../lib/p5.sound");
+    import("react-p5").then(async (mod) => {
+      // Set this as the active sketch
+      setActiveSketch('play');
+      // Load p5.sound safely to prevent AudioWorklet duplicate registration
+      await loadP5Sound();
       // returning react-p5 default export
       return mod.default;
     }),
@@ -2327,6 +2332,13 @@ export const handleStart = () => {
 };
 
 const Play: FC = () => {
+  useEffect(() => {
+    // Cleanup on unmount - reset the active sketch
+    return () => {
+      setActiveSketch(null);
+    };
+  }, []);
+
   return (
     <Sketch
       preload={preload}

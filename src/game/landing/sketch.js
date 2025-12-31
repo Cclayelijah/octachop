@@ -1,5 +1,6 @@
 import { Particle } from "../Particle";
 import { songTracks } from "./constants";
+import { canHandleKeyPress } from "../lib/sketchManager";
 
 
 let p;
@@ -73,7 +74,21 @@ export const windowResized = (p5) => {
 };
 
 export const keyPressed = (p5, e) => {
+  // Use sketch manager to check if we can handle key press
+  if (!canHandleKeyPress('landing', p5.keyCode)) {
+    console.log('Landing sketch cannot handle keypress - blocked by sketch manager');
+    return;
+  }
+  
+  // Additional context checks
+  if (!songs || songs.length === 0) {
+    console.log('Landing sketch - no songs available');
+    return;
+  }
+  
+  console.log('Landing keyPressed:', p5.keyCode);
   p = p5;
+  
   if (!contextStarted) {
     context = new AudioContext();
     contextStarted = true;
