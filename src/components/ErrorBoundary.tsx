@@ -21,8 +21,10 @@ class ErrorBoundary extends React.Component<any, any> {
       if (this.state.hasError) {
         // You can render any custom fallback UI
         return <>
-        <h1>Something went wrong.</h1>
-        <p>Please Contact Elijah in the <Link href="https://discord.gg/ktTeZJsj47" target="_blank">discord server</Link> (PolarEyes) to report the issue.</p>
+        <div style={{textAlign: 'center'}}>
+          <h1>Something went wrong.</h1>
+          <p>Please let us know in the <Link style={{color: 'blueviolet'}} href="https://discord.gg/ktTeZJsj47" target="_blank">discord server</Link> what page you were on and what time the error occured. Thank you.</p>
+        </div>
         </>
       }
   

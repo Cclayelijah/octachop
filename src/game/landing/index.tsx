@@ -74,13 +74,13 @@ const Landing: FC = () => {
         padding={2}
       >
         <Box display="flex" justifyContent="space-between">
-          <Image src="/images/logo.png" width={70} height={120} />
+          <Image src="/images/logo.png" alt="Logo Button" width={70} height={120} />
           <UserButton />
         </Box>
         <Box display="flex" justifyContent="space-between">
-          <Image src="/images/settings.png" width={60} height={60} />
+          <Image src="/images/settings.png" alt="Settings" width={60} height={60} />
           <Link href="/browse">
-            <Image src="/images/arrow1.png" width={100} height={60} />
+            <Image src="/images/arrow1.png" alt="Start Button" width={100} height={60} />
           </Link>
         </Box>
       </Box>
