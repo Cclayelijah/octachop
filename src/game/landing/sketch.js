@@ -84,7 +84,6 @@ export const setup = (p5, canvasParentRef) => {
   // Initialize cursor position
   posX = width / 2;
   posY = height / 2;
-  // arc1.mouseOver();
 };
 
 export const windowResized = (p5) => {
@@ -137,12 +136,10 @@ export const mouseClicked = (p5, e) => {
   
   // Debounce: ignore clicks that happen within 300ms of the last click
   if (currentTime - lastClickTime < 300) {
-    console.log('Click ignored due to debouncing');
     return;
   }
   lastClickTime = currentTime;
   
-  console.log('mouseClicked called, paused state:', paused);
   p = p5;
   if (!contextStarted) {
     context = new AudioContext();
@@ -184,9 +181,6 @@ export const mouseWheel = (p5, event) => {
   const oldVolume = volume;
   volume = p.constrain(volume - volumeChange, 0, 1);
   
-  console.log('Scroll event - deltaY:', deltaY, 'normalizedDelta:', normalizedDelta, 'volumeChange:', volumeChange);
-  console.log('Volume changed from', oldVolume, 'to', volume);
-  
   // Update volume for all songs
   if (songs && songs.length > 0) {
     for (let i = 0; i < songs.length; i++) {
@@ -208,11 +202,8 @@ export const mouseWheel = (p5, event) => {
 };
 
 const handlePause = () => {
-  console.log('handlePause called, paused state:', paused, 'isHandling:', isHandlingPause);
-  
   // Prevent multiple rapid calls
   if (isHandlingPause) {
-    console.log('Already handling pause, ignoring call');
     return;
   }
   isHandlingPause = true;
@@ -225,10 +216,8 @@ const handlePause = () => {
   }
   
   if (paused) {
-    console.log('Starting playback...');
     context.resume().then(() => {
       songs[songNum].play();
-      console.log("play");
       // Keep visual loop running - removed p.loop()
       isHandlingPause = false; // Reset guard after operation completes
     }).catch((error) => {
@@ -236,14 +225,11 @@ const handlePause = () => {
       isHandlingPause = false;
     });
   } else {
-    console.log('Pausing playback...');
     songs[songNum].pause();
-    console.log("pause");
     // Keep visual loop running - removed p.noLoop()
     isHandlingPause = false; // Reset guard immediately for pause
   }
   paused = !paused;
-  console.log('New paused state:', paused);
 };
 
 export const draw = (p5) => {
@@ -263,6 +249,7 @@ export const draw = (p5) => {
 
     fft.analyze();
     let amp = fft.getEnergy(20, 200);
+    
     p.push();
     if (amp > 200) {
       p.rotate(p.random(-0.5, 0.5));
@@ -274,26 +261,71 @@ export const draw = (p5) => {
       width + 20 + p.map(amp, 0, 240, 0, width / 8),
       height + 20 + p.map(amp, 0, 240, 0, height / 8)
     );
+    
+    // Store the arc rotation amount
+    let arcRotation = amp / 20; // This is in radians
+    
     // slice options
-    p.rotate(amp / 20);
+    p.rotate(arcRotation);
     p.stroke(190, 183, 223);
-    // p.fill(255, 150);
+    
+    // Mouse section detection for interactive highlighting
+    // Calculate mouse position relative to canvas center
+    let mouseXFromCenter = p.mouseX - width / 2;
+    let mouseYFromCenter = p.mouseY - height / 2;
+    
+    // Calculate mouse angle in screen space (0-360 degrees)
+    let mouseAngle = Math.atan2(mouseYFromCenter, mouseXFromCenter) * 180 / Math.PI;
+    if (mouseAngle < 0) mouseAngle += 360;
+    
+    // Use the raw mouse angle without rotation compensation (this was working)
+    let testAngle = mouseAngle;
+    
+    // Determine which section contains the mouse (0-120°=1, 120-240°=2, 240-360°=3)
+    let mouseInSection = -1;
+    if (testAngle >= 0 && testAngle < 120) mouseInSection = 1;
+    else if (testAngle >= 120 && testAngle < 240) mouseInSection = 2; 
+    else if (testAngle >= 240 && testAngle < 360) mouseInSection = 3;
+    
+    // Default audio-reactive alpha for sections
     let alpha = p.map(amp, 240, 0, 120, 30);
-    // p.fill(0, 100);
-    p.fill(0, alpha);
-    arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
-    arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
-    arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+    
+    // Draw arc sections with mouse-based highlighting
+    if (mouseInSection === 1) {
+      // Highlight section 1 with full black opacity, others with audio-reactive alpha
+      p.fill(0, 255);
+      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+      p.fill(0, alpha);
+      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+    } else if (mouseInSection === 2) {
+      // Highlight section 2 with full black opacity, others with audio-reactive alpha
+      p.fill(0, alpha);
+      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+      p.fill(0, 255);
+      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+      p.fill(0, alpha);
+      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+    } else if (mouseInSection === 3) {
+      // Highlight section 3 with full black opacity, others with audio-reactive alpha
+      p.fill(0, alpha);
+      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+      p.fill(0, 255);
+      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+    } else {
+      // No section highlighted - draw all with audio-reactive alpha
+      p.fill(0, alpha);
+      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+    }
+    // Center circle (audio visualizer core)
     p.fill(0);
-    // p.noStroke();
     p.ellipse(0, 0, p.map(amp, 0, 250, 10 * px, 24 * px) + (amp > 210 ? 4 : 0));
     p.pop();
-    // dark filter
-    // p.fill(0, alpha);
-    // p.noStroke();
-    // p.rect(0, 0, width, height);
 
-    // p.fill(0, alpha);
+    // Audio waveform visualization
     p.fill(0, 100);
     p.stroke(255);
     p.strokeWeight(3);
@@ -404,9 +436,7 @@ const drawVolumeDisplay = (p5) => {
     
     p.pop();
   } else if (showVolumeDisplay && (p.millis() - volumeDisplayTimer >= volumeDisplayDuration)) {
-    // Hide the volume display after duration
+    // Hide the volume display after duration expires
     showVolumeDisplay = false;
-    
-    // Visual loop should always be running now - removed p.noLoop()
   }
 };
