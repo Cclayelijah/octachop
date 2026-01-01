@@ -156,7 +156,6 @@ export const mouseClicked = (p5, e) => {
   }
   if (!started) {
     started = true;
-    return;
   }
   
   // Always handle play/pause on mouse click (same as spacebar)
