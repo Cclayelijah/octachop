@@ -107,12 +107,25 @@ const Landing: FC = () => {
       />
       
       <style jsx>{`
+        :global(html), :global(body) {
+          overflow: hidden !important;
+          height: 100vh !important;
+          position: fixed !important;
+          width: 100% !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
         :global(*) {
           cursor: url('/cursor/white-7.png') 7 7, auto !important;
         }
         :global(canvas) {
           cursor: url('/cursor/white-7.png') 7 7, auto !important;
           cursor: -webkit-image-set(url('/cursor/white-7.png') 1x) 7 7, auto !important;
+        }
+        :global(body) {
+          touch-action: none !important;
+          -webkit-overflow-scrolling: touch !important;
+          overscroll-behavior: none !important;
         }
       `}</style>
       <Sketch
