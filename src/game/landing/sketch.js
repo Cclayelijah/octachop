@@ -10,6 +10,8 @@ let context;
 let started = false;
 let contextStarted = false;
 let paused = true;
+let isHandlingPause = false; // Guard against rapid consecutive calls
+let lastClickTime = 0; // Debounce mechanism
 let songs = [];
 let songNum;
 let volume = 0.5;
@@ -125,11 +127,33 @@ export const keyPressed = (p5, e) => {
 };
 
 export const mouseClicked = (p5, e) => {
+  // Prevent default behavior and stop event propagation
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  const currentTime = Date.now();
+  
+  // Debounce: ignore clicks that happen within 300ms of the last click
+  if (currentTime - lastClickTime < 300) {
+    console.log('Click ignored due to debouncing');
+    return;
+  }
+  lastClickTime = currentTime;
+  
+  console.log('mouseClicked called, paused state:', paused);
   p = p5;
   if (!contextStarted) {
     context = new AudioContext();
     contextStarted = true;
   }
+  if (!started) {
+    started = true;
+  }
+  
+  // Handle play/pause on mouse click (same as spacebar)
+  handlePause();
 };
 
 export const mouseWheel = (p5, event) => {
@@ -187,24 +211,42 @@ export const mouseWheel = (p5, event) => {
 };
 
 const handlePause = () => {
+  console.log('handlePause called, paused state:', paused, 'isHandling:', isHandlingPause);
+  
+  // Prevent multiple rapid calls
+  if (isHandlingPause) {
+    console.log('Already handling pause, ignoring call');
+    return;
+  }
+  isHandlingPause = true;
+  
   // Safety check: ensure we have valid songs and songNum
   if (!songs || songs.length === 0 || songNum < 0 || songNum >= songs.length || !songs[songNum]) {
     console.warn('Cannot handle pause: invalid songs or songNum', { songsLength: songs?.length, songNum });
+    isHandlingPause = false;
     return;
   }
   
   if (paused) {
+    console.log('Starting playback...');
     context.resume().then(() => {
       songs[songNum].play();
       console.log("play");
       p.loop();
+      isHandlingPause = false; // Reset guard after operation completes
+    }).catch((error) => {
+      console.error('Error resuming context:', error);
+      isHandlingPause = false;
     });
   } else {
+    console.log('Pausing playback...');
     songs[songNum].pause();
     console.log("pause");
     p.noLoop();
+    isHandlingPause = false; // Reset guard immediately for pause
   }
   paused = !paused;
+  console.log('New paused state:', paused);
 };
 
 export const draw = (p5) => {
