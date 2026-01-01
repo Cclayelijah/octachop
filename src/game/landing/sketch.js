@@ -37,6 +37,11 @@ let mouseY = 0;
 // Cursor tracking variables
 let posX, posY;
 
+// Button animation variables
+let pulseTime = 0;
+let hoveredSection = -1;
+let animationScale = 1;
+
 export const preload = (p5) => {
   p = p5;
   p5.soundFormats("mp3", "wav", "ogg");
@@ -128,6 +133,10 @@ export const keyPressed = (p5, e) => {
 export const mouseClicked = (p5, e) => {
   // Prevent default behavior and stop event propagation
   if (e) {
+    // Check if the click came from a UI element (not the canvas)
+    if (e.target && e.target.tagName !== 'CANVAS') {
+      return; // Don't handle clicks on UI elements
+    }
     e.preventDefault();
     e.stopPropagation();
   }
@@ -147,17 +156,23 @@ export const mouseClicked = (p5, e) => {
   }
   if (!started) {
     started = true;
+    return;
   }
   
-  // Handle play/pause on mouse click (same as spacebar)
+  // Always handle play/pause on mouse click (same as spacebar)
   handlePause();
 };
 
-export const mouseWheel = (p5, event) => {
+export const mouseWheel = (p5, event, isSettingsOpen) => {
   p = p5;
   
   // Only handle scroll if this is the active sketch
   if (!canHandleKeyPress('landing')) {
+    return;
+  }
+
+  // If settings drawer is open, don't interfere with its scrolling
+  if (isSettingsOpen) {
     return;
   }
 
@@ -194,7 +209,7 @@ export const mouseWheel = (p5, event) => {
   
   // Visual loop should always be running now
   
-  // Prevent default scroll behavior
+  // Prevent default scroll behavior only when settings drawer is closed
   if (event.preventDefault) {
     event.preventDefault();
   }
@@ -230,6 +245,31 @@ const handlePause = () => {
     isHandlingPause = false; // Reset guard immediately for pause
   }
   paused = !paused;
+};
+
+// Button functions for each section
+const handleSection1Click = () => {
+  console.log('Section 1 clicked - Navigate to Song Selection');
+  // Navigate to song selection page
+  if (typeof window !== 'undefined') {
+    window.location.href = '/select';
+  }
+};
+
+const handleSection2Click = () => {
+  console.log('Section 2 clicked - Navigate to Song Selection');
+  // Navigate to song selection page
+  if (typeof window !== 'undefined') {
+    window.location.href = '/select';
+  }
+};
+
+const handleSection3Click = () => {
+  console.log('Section 3 clicked - Navigate to User Profile');
+  // Navigate to user profile
+  if (typeof window !== 'undefined') {
+    window.location.href = '/user';
+  }
 };
 
 export const draw = (p5) => {
@@ -287,38 +327,54 @@ export const draw = (p5) => {
     else if (testAngle >= 120 && testAngle < 240) mouseInSection = 2; 
     else if (testAngle >= 240 && testAngle < 360) mouseInSection = 3;
     
+    // Update hovered section for click handling
+    hoveredSection = mouseInSection;
+    
+    // Update pulse animation
+    if (mouseInSection !== -1) {
+      pulseTime += 0.15; // Animation speed
+      animationScale = 1 + Math.sin(pulseTime) * 0.1; // Pulse between 0.9 and 1.1
+    } else {
+      pulseTime = 0;
+      animationScale = 1;
+    }
+    
     // Default audio-reactive alpha for sections
     let alpha = p.map(amp, 240, 0, 120, 30);
     
-    // Draw arc sections with mouse-based highlighting
+    // Calculate animated size for hovered sections
+    let arcSize = width * 2;
+    let animatedArcSize = arcSize * animationScale;
+    
+    // Draw arc sections with mouse-based highlighting and animation
     if (mouseInSection === 1) {
-      // Highlight section 1 with full black opacity, others with audio-reactive alpha
+      // Highlight section 1 with full black opacity and animation, others with audio-reactive alpha
       p.fill(0, 255);
-      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+      arc1 = p.arc(0, 0, animatedArcSize, animatedArcSize, 0, 120 - 8, p.PIE);
       p.fill(0, alpha);
-      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
-      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+      arc2 = p.arc(0, 0, arcSize, arcSize, 120, 240 - 16, p.PIE);
+      arc3 = p.arc(0, 0, arcSize, arcSize, 240, 360 - 12, p.PIE);
     } else if (mouseInSection === 2) {
-      // Highlight section 2 with full black opacity, others with audio-reactive alpha
+      // Highlight section 2 with full black opacity and animation, others with audio-reactive alpha
       p.fill(0, alpha);
-      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
+      arc1 = p.arc(0, 0, arcSize, arcSize, 0, 120 - 8, p.PIE);
       p.fill(0, 255);
-      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+      arc2 = p.arc(0, 0, animatedArcSize, animatedArcSize, 120, 240 - 16, p.PIE);
       p.fill(0, alpha);
-      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+      arc3 = p.arc(0, 0, arcSize, arcSize, 240, 360 - 12, p.PIE);
     } else if (mouseInSection === 3) {
-      // Highlight section 3 with full black opacity, others with audio-reactive alpha
+      // Highlight section 3 with full black opacity and animation, others with audio-reactive alpha
       p.fill(0, alpha);
-      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
-      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
+      arc1 = p.arc(0, 0, arcSize, arcSize, 0, 120 - 8, p.PIE);
+      arc2 = p.arc(0, 0, arcSize, arcSize, 120, 240 - 16, p.PIE);
       p.fill(0, 255);
-      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+      arc3 = p.arc(0, 0, animatedArcSize, animatedArcSize, 240, 360 - 12, p.PIE);
     } else {
       // No section highlighted - draw all with audio-reactive alpha
       p.fill(0, alpha);
-      arc1 = p.arc(0, 0, width * 2, width * 2, 0, 120 - 8, p.PIE);
-      arc2 = p.arc(0, 0, width * 2, width * 2, 120, 240 - 16, p.PIE);
-      arc3 = p.arc(0, 0, width * 2, width * 2, 240, 360 - 12, p.PIE);
+      arc1 = p.arc(0, 0, arcSize, arcSize, 0, 120 - 8, p.PIE);
+      arc2 = p.arc(0, 0, arcSize, arcSize, 120, 240 - 16, p.PIE);
+      arc3 = p.arc(0, 0, arcSize, arcSize, 240, 360 - 12, p.PIE);
     }
     // Center circle (audio visualizer core)
     p.fill(0);
