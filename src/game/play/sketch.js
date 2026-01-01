@@ -198,15 +198,22 @@ export const setup = (p5, canvasParentRef) => {
     opad.hide();
   }
 
-  if (ANALYZE_AUDIO) {
-    fft = new global.p5.FFT();
-    fft.setInput(song);
+  if (ANALYZE_AUDIO && song) {
+    try {
+      fft = new global.p5.FFT();
+      fft.setInput(song);
+    } catch (error) {
+      console.error('Error setting up FFT:', error);
+      fft = null;
+    }
   }
-  hitNormal.setVolume(volume);
-  hitWhistle.setVolume(volume);
-  hitFinish.setVolume(volume);
-  hitClap.setVolume(volume);
-  song.setVolume(volume);
+  
+  // Safety check for audio objects before setting volume
+  if (hitNormal && hitNormal.setVolume) hitNormal.setVolume(volume);
+  if (hitWhistle && hitWhistle.setVolume) hitWhistle.setVolume(volume);
+  if (hitFinish && hitFinish.setVolume) hitFinish.setVolume(volume);
+  if (hitClap && hitClap.setVolume) hitClap.setVolume(volume);
+  if (song && song.setVolume) song.setVolume(volume);
 
   p.textFont(myFont);
   p.textSize(24);
@@ -791,18 +798,42 @@ export const draw = (p) => {
     displayResults();
     return;
   }
-  currTime = Math.floor(song.currentTime() * 1000) - DELAY;
+  
+  // Safety check for song object before accessing currentTime
+  if (!song || !song.currentTime) {
+    console.warn('Song object not available or currentTime method missing');
+    return;
+  }
+  
+  let currentTimeValue = 0;
+  try {
+    currentTimeValue = song.currentTime();
+  } catch (error) {
+    console.warn('Error getting song currentTime:', error);
+    return;
+  }
+  
+  currTime = Math.floor(currentTimeValue * 1000) - DELAY;
   p.background(0);
   p.translate(width / 2, half);
   p.imageMode(p.CENTER);
   p.rectMode(p.CENTER);
-  if (ANALYZE_AUDIO) {
-    fft.analyze();
-    amp = fft.getEnergy(20, 200);
+  
+  if (ANALYZE_AUDIO && fft) {
+    try {
+      fft.analyze();
+      amp = fft.getEnergy(20, 200);
+    } catch (error) {
+      console.warn('FFT analysis failed:', error);
+      amp = 0; // Use default value
+    }
     p.push();
     if (amp > 225 && IMAGE_TILT) {
       p.rotate(p.random(p.radians(-0.5), p.radians(0.5)));
     }
+  } else if (ANALYZE_AUDIO) {
+    // FFT not available, use default values
+    amp = 0;
   }
 
   p.image(
@@ -883,14 +914,22 @@ export const draw = (p) => {
   if (canvas) canvas.drawingContext.shadowBlur = 0;
 
   // audio visualization
-  if (SHOW_WAVEFORM && ANALYZE_AUDIO) {
+  if (SHOW_WAVEFORM && ANALYZE_AUDIO && fft) {
     p.push();
     p.rotate(p.radians(90 + 45 / 2));
     p.stroke(...SLICE_COLOR);
     p.noFill();
     p.strokeWeight(3);
     p.angleMode(p.DEGREES);
-    let wave = fft.waveform();
+    
+    let wave = [];
+    try {
+      wave = fft.waveform();
+    } catch (error) {
+      console.warn('Error getting waveform data:', error);
+      wave = new Array(1024).fill(0); // Default empty waveform
+    }
+    
     for (let t = -1; t <= 1; t += 2) {
       p.beginShape();
       for (let i = 0; i < width; i += 0.5) {
@@ -1120,5 +1159,72 @@ const drawVolumeDisplay = (p5) => {
   } else if (showVolumeDisplay && (p.millis() - volumeDisplayTimer >= volumeDisplayDuration)) {
     // Hide the volume display after duration
     showVolumeDisplay = false;
+  }
+};
+
+// Cleanup function to stop music and reset everything when leaving the page
+export const cleanup = () => {
+  try {
+    // Stop the song if it's playing
+    if (song && song.isPlaying && song.isPlaying()) {
+      song.stop();
+    }
+    
+    // Clear and reset FFT
+    if (fft) {
+      fft = null;
+    }
+    
+    // Clear particles array
+    if (particles && particles.length > 0) {
+      particles = [];
+    }
+    
+    // Reset all game state variables
+    started = false;
+    paused = false;
+    notesFinished = false;
+    songEnded = false;
+    currBreak = false;
+    
+    // Reset scoring variables
+    score = 0;
+    combo = 0;
+    maxCombo = 0;
+    numPlayedNotes = 0;
+    accuracy = 0;
+    numHits = 0;
+    numMisses = 0;
+    numAttempts = 1;
+    
+    // Reset volume display
+    showVolumeDisplay = false;
+    volumeDisplayTimer = 0;
+    
+    // Reset time variables
+    currTime = 0;
+    songDuration = 0;
+    
+    // Clear notes and game objects if they exist
+    if (typeof notes !== 'undefined') {
+      notes = [];
+    }
+    if (typeof breaks !== 'undefined') {
+      breaks = [];
+    }
+    
+    // Reset song reference
+    song = null;
+    
+    // Suspend audio context if it exists
+    if (context && context.state === 'running') {
+      context.suspend().catch(() => {
+        // Ignore errors during cleanup
+      });
+    }
+    
+    console.log('Play page cleanup completed');
+  } catch (error) {
+    console.error('Error during play page cleanup:', error);
   }
 };

@@ -9,6 +9,9 @@ import {
   preload,
   setup,
   windowResized,
+  cleanup,
+  doubleClicked,
+  forceResize,
 } from "./sketch";
 import {
   Button,
@@ -64,8 +67,17 @@ const Landing: FC = () => {
   // Set as active when component mounts, cleanup when unmounts
   useEffect(() => {
     setActiveSketch('landing');
+    
+    // Force resize after a short delay to ensure canvas takes full screen
+    const resizeTimer = setTimeout(() => {
+      forceResize();
+    }, 100);
+    
     return () => {
+      // Clean up music and resources when leaving the landing page
+      cleanup();
       setActiveSketch(null);
+      clearTimeout(resizeTimer);
     };
   }, []);
 
@@ -136,6 +148,7 @@ const Landing: FC = () => {
         mouseClicked={mouseClicked}
         mouseWheel={(p5, event) => mouseWheel(p5, event, isSettingsOpen)}
         keyPressed={keyPressed}
+        doubleClicked={doubleClicked}
       />
     </Box>
   );

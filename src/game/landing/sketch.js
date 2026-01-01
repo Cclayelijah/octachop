@@ -53,37 +53,75 @@ export const preload = (p5) => {
 
 export const setup = (p5, canvasParentRef) => {
   p = p5;
+  
+  // Force update window dimensions to ensure full screen coverage
   width = p.windowWidth;
   height = p.windowHeight;
+  
+  // Additional check to ensure we have valid dimensions
+  if (width <= 0 || height <= 0) {
+    // Fallback to screen dimensions if window dimensions are invalid
+    width = window.innerWidth || document.documentElement.clientWidth || 800;
+    height = window.innerHeight || document.documentElement.clientHeight || 600;
+  }
+  
   let size = width >= height ? height : width;
   px = size / 800;
   edgeLength = size / 4;
   canvas = p.createCanvas(width, height).parent(canvasParentRef);
   
-  // Safety check: ensure we have songs loaded
-  if (songs.length === 0) {
-    console.warn('No songs loaded in setup');
-    return;
+  // Force canvas to take full screen
+  if (canvas && canvas.canvas) {
+    canvas.canvas.style.width = '100vw';
+    canvas.canvas.style.height = '100vh';
+    canvas.canvas.style.position = 'absolute';
+    canvas.canvas.style.top = '0';
+    canvas.canvas.style.left = '0';
   }
   
-  songNum = Math.floor(Math.random() * songTracks.length); 
-  fft = new global.p5.FFT(0.2);
-  fft.setInput(songs[songNum]);
-  for (let i = 0; i < songs.length; i++) {
-    songs[i].setVolume(volume);
-    songs[i].onended(() => {
-      if (!paused) {
-        if (i + 1 > songs.length - 1) {
-          fft.setInput(songs[0]);
-          songNum = 0;
-        } else {
-          fft.setInput(songs[i + 1]);
-          songNum = i + 1;
-        }
-        songs[songNum].play();
-      }
-    });
+  console.log(`Landing canvas created: ${width}x${height}`);
+  
+  // Safety check: ensure we have songs loaded, if not they might have been cleared
+  if (songs.length === 0) {
+    console.warn('No songs loaded in setup, they may have been cleared during cleanup');
+    // Don't return here, let preload handle reloading if needed
   }
+  
+  // Additional safety: ensure we have a valid songNum and songs array
+  if (songs.length > 0) {
+    songNum = Math.floor(Math.random() * songTracks.length); 
+    
+    // Create FFT only if we have valid songs
+    try {
+      fft = new global.p5.FFT(0.2);
+      fft.setInput(songs[songNum]);
+      
+      for (let i = 0; i < songs.length; i++) {
+        if (songs[i] && songs[i].setVolume) {
+          songs[i].setVolume(volume);
+          songs[i].onended(() => {
+            if (!paused) {
+              if (i + 1 > songs.length - 1) {
+                fft.setInput(songs[0]);
+                songNum = 0;
+              } else {
+                fft.setInput(songs[i + 1]);
+                songNum = i + 1;
+              }
+              songs[songNum].play();
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up FFT:', error);
+      fft = null;
+    }
+  } else {
+    songNum = -1;
+    fft = null;
+  }
+  
   p.angleMode(p.DEGREES);
   
   // Initialize cursor position
@@ -93,12 +131,42 @@ export const setup = (p5, canvasParentRef) => {
 
 export const windowResized = (p5) => {
   p = p5;
+  
+  // Force update window dimensions
   width = p.windowWidth;
   height = p.windowHeight;
+  
+  // Additional check to ensure we have valid dimensions
+  if (width <= 0 || height <= 0) {
+    // Fallback to screen dimensions if window dimensions are invalid
+    width = window.innerWidth || document.documentElement.clientWidth || 800;
+    height = window.innerHeight || document.documentElement.clientHeight || 600;
+  }
+  
   let size = width >= height ? height : width;
   px = size / 800;
   edgeLength = size / 4;
   canvas = p.resizeCanvas(width, height);
+  
+  // Force canvas to take full screen after resize
+  if (canvas && canvas.canvas) {
+    canvas.canvas.style.width = '100vw';
+    canvas.canvas.style.height = '100vh';
+    canvas.canvas.style.position = 'absolute';
+    canvas.canvas.style.top = '0';
+    canvas.canvas.style.left = '0';
+  }
+  
+  console.log(`Landing canvas resized: ${width}x${height}`);
+};
+
+// Force canvas to full screen - can be called when returning to landing page
+export const forceResize = (p5) => {
+  if (p5) {
+    windowResized(p5);
+  } else if (p) {
+    windowResized(p);
+  }
 };
 
 export const keyPressed = (p5, e) => {
@@ -127,6 +195,33 @@ export const keyPressed = (p5, e) => {
   if (e.keyCode === 32) {
     e.preventDefault();
     handlePause();
+  }
+  if (e.keyCode === 27) { // ESC key
+    e.preventDefault();
+    // Exit fullscreen if currently in fullscreen mode using native API
+    const isFullscreen = document.fullscreenElement || 
+                        document.webkitFullscreenElement || 
+                        document.mozFullScreenElement || 
+                        document.msFullscreenElement;
+    
+    if (isFullscreen) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => {
+          console.log('Landing page exited fullscreen mode');
+        }).catch((error) => {
+          console.warn('Exit fullscreen failed:', error.message);
+        });
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+        console.log('Landing page exited fullscreen mode (webkit)');
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+        console.log('Landing page exited fullscreen mode (moz)');
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+        console.log('Landing page exited fullscreen mode (ms)');
+      }
+    }
   }
 };
 
@@ -215,6 +310,76 @@ export const mouseWheel = (p5, event, isSettingsOpen) => {
   return false;
 };
 
+// Double-click handler for fullscreen functionality
+export const doubleClicked = (p5) => {
+  try {
+    // Check if we can handle key press (sketch manager integration)
+    if (!canHandleKeyPress('landing')) {
+      return;
+    }
+    
+    // Use browser's native fullscreen API instead of p5's fullscreen method
+    if (typeof document !== 'undefined' && document.documentElement) {
+      const elem = document.documentElement;
+      
+      // Check if already in fullscreen
+      const isFullscreen = document.fullscreenElement || 
+                          document.webkitFullscreenElement || 
+                          document.mozFullScreenElement || 
+                          document.msFullscreenElement;
+      
+      if (!isFullscreen) {
+        // Try different fullscreen methods for cross-browser compatibility
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen().then(() => {
+            console.log('Landing page entered fullscreen mode');
+          }).catch((error) => {
+            console.warn('Fullscreen request failed:', error.message);
+          });
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+          console.log('Landing page entered fullscreen mode (webkit)');
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+          console.log('Landing page entered fullscreen mode (moz)');
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+          console.log('Landing page entered fullscreen mode (ms)');
+        } else {
+          console.warn('Fullscreen API not supported in this browser');
+          return;
+        }
+        
+        // Try to lock orientation to landscape on mobile if possible (with safer checks)
+        setTimeout(() => {
+          try {
+            if (typeof window !== 'undefined' && 
+                window.screen && 
+                window.screen.orientation && 
+                typeof window.screen.orientation.lock === 'function') {
+              window.screen.orientation.lock('landscape').catch((error) => {
+                // Orientation lock not supported or permission denied, ignore error
+                console.log('Orientation lock not supported or permission denied:', error.message);
+              });
+            }
+          } catch (orientationError) {
+            // Additional safety catch for orientation lock
+            console.log('Orientation lock failed:', orientationError.message);
+          }
+        }, 100); // Small delay to let fullscreen activate first
+      } else {
+        console.log('Already in fullscreen mode');
+      }
+    } else {
+      console.warn('Document or documentElement not available');
+    }
+    
+  } catch (error) {
+    console.error('Error in doubleClicked handler:', error);
+    // Don't throw the error, just log it to prevent crashes
+  }
+};
+
 const handlePause = () => {
   // Prevent multiple rapid calls
   if (isHandlingPause) {
@@ -278,16 +443,32 @@ export const draw = (p5) => {
   
   if (started) {
     // Safety check: ensure we have valid songNum and loaded assets
-    if (songNum < 0 || songNum >= bg.length || !bg[songNum]) {
-      console.warn('Invalid songNum or background not loaded:', songNum);
+    if (songNum < 0 || songNum >= bg.length || !bg[songNum] || !fft) {
+      console.warn('Invalid songNum, background not loaded, or FFT not available:', { songNum, bgLength: bg.length, fftExists: !!fft });
+      return;
+    }
+    
+    // Additional safety check for FFT and audio connection
+    if (!songs[songNum] || songs[songNum].isLoaded && !songs[songNum].isLoaded()) {
+      console.warn('Song not loaded or FFT connection invalid');
       return;
     }
     
     p.translate(width / 2, height / 2);
     p.imageMode(p.CENTER);
 
-    fft.analyze();
-    let amp = fft.getEnergy(20, 200);
+    let amp = 0;
+    let wave = [];
+    
+    try {
+      fft.analyze();
+      amp = fft.getEnergy(20, 200);
+      wave = fft.waveform();
+    } catch (error) {
+      console.warn('FFT analysis failed, using default values:', error);
+      amp = 0;
+      wave = new Array(1024).fill(0); // Default empty waveform
+    }
     
     p.push();
     if (amp > 200) {
@@ -384,7 +565,7 @@ export const draw = (p5) => {
     p.fill(0, 100);
     p.stroke(255);
     p.strokeWeight(3);
-    let wave = fft.waveform();
+    // wave variable already declared above in the try-catch block
     if (canvas) canvas.drawingContext.shadowColor = "black";
     if (canvas) canvas.drawingContext.shadowBlur = 100 * px;
     for (let t = -1; t <= 1; t += 2) {
@@ -423,8 +604,8 @@ export const draw = (p5) => {
   } else {
     p.textSize(32);
     p.textAlign(p.CENTER);
-    p.fill(0, 102, 153);
-    p.text('Press [space] to play music.', width / 2, height / 2);
+    p.fill(255, 255, 255);
+    p.text('Click me ^_^', width / 2, height / 2);
   }
   
   // Update cursor position
@@ -493,5 +674,56 @@ const drawVolumeDisplay = (p5) => {
   } else if (showVolumeDisplay && (p.millis() - volumeDisplayTimer >= volumeDisplayDuration)) {
     // Hide the volume display after duration expires
     showVolumeDisplay = false;
+  }
+};
+
+// Cleanup function to stop music and reset everything when leaving the page
+export const cleanup = () => {
+  try {
+    // Stop all currently playing songs
+    if (songs && songs.length > 0) {
+      songs.forEach((song, index) => {
+        if (song && song.isPlaying && song.isPlaying()) {
+          song.stop();
+        }
+      });
+    }
+    
+    // Stop the specific current song if it exists
+    if (songNum >= 0 && songs[songNum]) {
+      songs[songNum].stop();
+    }
+    
+    // Clear and reset FFT
+    if (fft) {
+      fft = null;
+    }
+    
+    // Clear particles array
+    particles = [];
+    
+    // Reset state variables
+    started = false;
+    paused = true;
+    isHandlingPause = false;
+    showVolumeDisplay = false;
+    hoveredSection = -1;
+    contextStarted = false;
+    
+    // Reset song arrays to force reload on next visit
+    songs = [];
+    bg = [];
+    songNum = -1;
+    
+    // Suspend audio context if it exists
+    if (context && context.state === 'running') {
+      context.suspend().catch(() => {
+        // Ignore errors during cleanup
+      });
+    }
+    
+    console.log('Landing page cleanup completed');
+  } catch (error) {
+    console.error('Error during landing page cleanup:', error);
   }
 };
