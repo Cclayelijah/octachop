@@ -6,7 +6,7 @@ import React from 'react';
 import styles from './SongDisplay.module.css';
 import { SongDisplayProps } from '../../../../shared/types';
 import { formatDuration } from '../../../../shared/utils/formatting';
-import DifficultyStars from '../DifficultyStars';
+import DifficultyStars from '../DifficultyStars/DifficultyStars';
 
 export const SongDisplay: React.FC<SongDisplayProps> = ({ song, selectedLevel }) => {
   if (!song) {
@@ -19,16 +19,16 @@ export const SongDisplay: React.FC<SongDisplayProps> = ({ song, selectedLevel })
     );
   }
 
-  const backgroundImage = song.backgroundFileName 
-    ? `/res/songs/${song.audioFileName.replace('.mp3', '')}/${song.backgroundFileName}`
-    : '/images/default-bg.jpg';
+  const backgroundImage = song.defaultImg 
+    ? `/res/songs/${song.title}/${song.defaultImg}`
+    : '/res/songs/pizza.png';
 
   return (
     <div className={styles.container}>
       <div className={styles.artworkContainer}>
         <img 
           src={backgroundImage}
-          alt={`${song.songTitle} artwork`}
+          alt={`${song.title} artwork`}
           className={styles.artwork}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -43,8 +43,8 @@ export const SongDisplay: React.FC<SongDisplayProps> = ({ song, selectedLevel })
       </div>
       
       <div className={styles.songInfo}>
-        <h2 className={styles.title}>{song.songTitle}</h2>
-        <p className={styles.artist}>{song.songArtist}</p>
+        <h2 className={styles.title}>{song.title}</h2>
+        <p className={styles.artist}>{song.artist}</p>
         
         {selectedLevel && (
           <div className={styles.levelInfo}>
@@ -53,9 +53,7 @@ export const SongDisplay: React.FC<SongDisplayProps> = ({ song, selectedLevel })
               size="md"
               showNumber={true}
             />
-            {selectedLevel.levelName && (
-              <span className={styles.levelName}>{selectedLevel.levelName}</span>
-            )}
+            <span className={styles.levelName}>Level {selectedLevel.levelId}</span>
           </div>
         )}
         

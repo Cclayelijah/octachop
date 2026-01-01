@@ -1,5 +1,5 @@
 /**
- * ScoresList component styles
+ * ScoresList component styles - Clean design matching mockup
  */
 
 .container {
@@ -8,49 +8,48 @@
 }
 
 .title {
-  margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-primary);
-  font-size: 1.2rem;
+  margin: 0 0 12px 0;
+  color: white;
+  font-size: 1rem;
   font-weight: 600;
-  text-align: center;
+  text-align: left;
 }
 
 .scoresList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 8px;
   overflow-y: auto;
-  height: calc(100% - 60px);
-  padding-right: var(--spacing-xs);
+  height: calc(100% - 40px);
+  padding-right: 4px;
 }
 
 .scoreItem {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  transition: all var(--duration-fast) var(--easing-standard);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
 }
 
 .scoreItem:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-primary);
-  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .scoreHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 6px;
 }
 
 .grade {
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   padding: 2px 8px;
-  border-radius: var(--border-radius-sm);
-  min-width: 30px;
+  border-radius: 4px;
+  min-width: 28px;
   text-align: center;
 }
 
@@ -88,26 +87,28 @@
 }
 
 .scoreNumber {
-  font-family: var(--font-family-mono);
+  font-family: 'Monaco', 'Menlo', monospace;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: white;
   flex: 1;
   text-align: center;
+  font-size: 0.9rem;
 }
 
 .accuracy {
   font-weight: 600;
-  color: var(--color-accent-gold);
-  min-width: 50px;
+  color: #ffd700;
+  min-width: 45px;
   text-align: right;
+  font-size: 0.85rem;
 }
 
 .scoreDetails {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .date {
@@ -116,7 +117,7 @@
 
 .stats {
   opacity: 0.7;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
 }
 
 /* Loading state */
@@ -175,4 +176,22 @@
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
+}
+
+/* Scrollbar styling */
+.scoresList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scoresList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scoresList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.scoresList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

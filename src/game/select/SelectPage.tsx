@@ -17,6 +17,8 @@ import {
   Level
 } from '../../shared/types';
 
+const defaultSongImg = 'pizza.png';
+
 // Mock data for demo purposes - replace with actual API calls
 const mockPlayer: PlayerInfoType = {
   userId: 1,
@@ -33,8 +35,8 @@ const mockSongs: SongWithLevels[] = [
   {
     songId: 1,
     beatmapSetId: 101,
-    songUrl: "example.mp3",
-    defaultImg: "default-bg.jpg",
+    songUrl: "bigblack.mp3",
+    defaultImg: "bigblack-bg.jpg",
     title: "Big Black",
     titleUnicode: "Big Black",
     artist: "The Quick Brown Fox",
@@ -64,9 +66,21 @@ const mockSongs: SongWithLevels[] = [
         breakData: [],
         beatmapUrl: "level2.osu",
         active: true
+      },
+      {
+        levelId: 3,
+        songId: 1,
+        beatmapId: 203,
+        difficulty: 6.06,
+        image: "level3.jpg",
+        approachRate: 10,
+        noteData: [],
+        breakData: [],
+        beatmapUrl: "level3.osu",
+        active: true
       }
     ],
-    maxDifficulty: 4.99,
+    maxDifficulty: 6.06,
     minDifficulty: 3.96,
     duration: 84,
     isFavorite: false
@@ -228,14 +242,16 @@ const SelectPage: React.FC = () => {
       <div className={styles.songArtwork}>
         {selectedSong?.defaultImg ? (
           <img 
-            src={`/res/images/${selectedSong.defaultImg}`} 
+            src={`/res/songs/${selectedSong.songId}/${selectedSong.defaultImg}`} 
             alt={`${selectedSong.title} background`}
             className={styles.backgroundImage}
           />
         ) : (
-          <div className={styles.placeholder}>
-            <p>Song Background Image</p>
-          </div>
+          <img 
+            src={`/res/songs/${defaultSongImg}`} 
+            alt={`${selectedSong!.title} background`}
+            className={styles.backgroundImage}
+          />
         )}
         {selectedSong && (
           <div className={styles.songOverlay}>
