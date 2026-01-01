@@ -453,15 +453,32 @@ export const keyPressed = (p5, e) => {
 };
 
 export const doubleClicked = (p) => {
-  p.fullscreen(true);
+  // Enhanced fullscreen for mobile - also works on desktop
+  if (mobile) {
+    // On mobile, request fullscreen with better orientation handling
+    p.fullscreen(true);
+    // Try to lock orientation to landscape on mobile if possible
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {
+        // Orientation lock not supported, ignore error
+      });
+    }
+  } else {
+    p.fullscreen(true);
+  }
 };
 
 export const mouseClicked = (p) => {
+  // Enhanced click handling for mobile touch
   if (context == undefined) {
     context = new AudioContext();
   }
   if (!started) {
     handleStart();
+    // On mobile, provide haptic feedback if available
+    if (mobile && navigator.vibrate) {
+      navigator.vibrate(50); // Short vibration feedback
+    }
   } else {
     context.resume();
   }
