@@ -1,0 +1,197 @@
+/**
+ * ScoresList component styles - Clean design matching mockup
+ */
+
+.container {
+  height: 100%;
+  overflow: hidden;
+}
+
+.title {
+  margin: 0 0 12px 0;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.scoresList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  height: calc(100% - 40px);
+  padding-right: 4px;
+}
+
+.scoreItem {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.scoreItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.scoreHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.grade {
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.gradeSS {
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  color: #000;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.gradeS {
+  background: linear-gradient(45deg, #C0C0C0, #E5E5E5);
+  color: #000;
+  box-shadow: 0 0 8px rgba(192, 192, 192, 0.5);
+}
+
+.gradeA {
+  background: linear-gradient(45deg, #00FF00, #32CD32);
+  color: #000;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
+.gradeB {
+  background: linear-gradient(45deg, #1E90FF, #00BFFF);
+  color: #fff;
+}
+
+.gradeC {
+  background: linear-gradient(45deg, #FF6347, #FF4500);
+  color: #fff;
+}
+
+.gradeD {
+  background: linear-gradient(45deg, #8B0000, #DC143C);
+  color: #fff;
+}
+
+.scoreNumber {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.accuracy {
+  font-weight: 600;
+  color: #ffd700;
+  min-width: 45px;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.scoreDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.date {
+  opacity: 0.8;
+}
+
+.stats {
+  opacity: 0.7;
+  font-size: 0.7rem;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.loadingSkeleton {
+  height: 60px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  border-radius: var(--border-radius-md);
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+/* Empty state */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60%;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.empty p {
+  margin: var(--spacing-xs) 0;
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scoreHeader {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  
+  .scoreNumber {
+    font-size: 0.9rem;
+  }
+  
+  .scoreDetails {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}
+
+/* Scrollbar styling */
+.scoresList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scoresList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scoresList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.scoresList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

@@ -1,0 +1,83 @@
+/**
+ * DifficultyStars component styles
+ */
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.star {
+  display: inline-block;
+  transition: all var(--duration-fast) var(--easing-standard);
+}
+
+/* Star states */
+.full {
+  color: var(--color-accent-gold);
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+}
+
+.half {
+  background: linear-gradient(
+    90deg, 
+    var(--color-accent-gold) 50%, 
+    var(--color-text-disabled) 50%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.empty {
+  color: var(--color-text-disabled);
+}
+
+/* Sizes */
+.sm .star {
+  font-size: 0.9rem;
+}
+
+.md .star {
+  font-size: 1.1rem;
+}
+
+.lg .star {
+  font-size: 1.3rem;
+}
+
+.number {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-size: 0.85em;
+  margin-left: var(--spacing-xs);
+}
+
+/* Animation on hover */
+.container:hover .full {
+  color: var(--color-primary);
+  text-shadow: 0 0 6px var(--color-primary-glow);
+  transform: scale(1.1);
+}
+
+.container:hover .half {
+  background: linear-gradient(
+    90deg, 
+    var(--color-primary) 50%, 
+    var(--color-text-disabled) 50%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: scale(1.1);
+}

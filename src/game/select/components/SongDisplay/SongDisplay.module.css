@@ -1,0 +1,157 @@
+/**
+ * SongDisplay component styles
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-surface-dark);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--easing-standard);
+}
+
+.container:hover {
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(-2px);
+}
+
+.artworkContainer {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: var(--color-surface-light);
+}
+
+.artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--easing-standard);
+}
+
+.artwork:hover {
+  transform: scale(1.02);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: var(--spacing-md);
+}
+
+.duration {
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--color-text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+  backdrop-filter: blur(4px);
+}
+
+.songInfo {
+  padding: var(--spacing-md);
+  background: var(--color-surface-dark);
+  border-top: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.levelInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.levelName {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-accent);
+  padding: 2px var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+}
+
+.difficultyRange {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.difficultyLabel {
+  color: var(--color-text-muted);
+}
+
+.difficultyValues {
+  color: var(--color-accent-gold);
+  font-weight: 600;
+}
+
+/* Placeholder state */
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--color-surface-dark);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--border-radius-lg);
+}
+
+.placeholderText {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .songInfo {
+    padding: var(--spacing-sm);
+  }
+  
+  .title {
+    font-size: 1rem;
+  }
+  
+  .artist {
+    font-size: 0.85rem;
+  }
+}

@@ -31,9 +31,11 @@ import { Stack } from "@mui/system";
 import Link from "next/link";
 import { clickCheck, handleClick } from "./utils";
 import Image from "next/image";
-import { UserButton } from "@clerk/nextjs";
 import { loadP5Sound } from "../lib/p5SoundLoader";
 import { setActiveSketch } from "../lib/sketchManager";
+import SettingsDrawer from "./components/SettingsDrawer";
+import ProfileCard from "./components/ProfileCard";
+import GoSelect from "./components/GoSelect";
 // Will only import `react-p5` on client-side
 const Sketch = dynamic(
   () =>
@@ -51,6 +53,9 @@ const Sketch = dynamic(
 );
 
 const Landing: FC = () => {
+  // Settings drawer state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
   // const [loggingIn, setLoggingIn] = useState(false);
   // const [authenticating, setAuthenticating] = useState(false);
   // const [username, setUsername] = useState("");
@@ -73,7 +78,7 @@ const Landing: FC = () => {
   // };
 
   return (
-    <Box>
+    <Box sx={{ overflow: 'hidden', height: '100vh', width: '100vw' }}>
       <Box
         position="absolute"
         height="100%"
@@ -84,18 +89,23 @@ const Landing: FC = () => {
         left={0}
         top={0}
         padding={2}
+        sx={{ 
+          zIndex: 1000, 
+          pointerEvents: 'none' // Make container transparent to clicks
+        }}
       >
-        <Box display="flex" justifyContent="space-between">
-          <Image src="/images/logo.png" alt="Logo Button" width={70} height={120} />
-          <UserButton />
-        </Box>
-        <Box display="flex" justifyContent="space-between">
-          <Image src="/images/settings.png" alt="Settings" width={60} height={60} />
-          <Link href="/browse">
-            <Image src="/images/arrow1.png" alt="Start Button" width={100} height={60} />
-          </Link>
-        </Box>
+        <ProfileCard isSettingsOpen={isSettingsOpen} />
+        <GoSelect 
+          isSettingsOpen={isSettingsOpen} 
+          onSettingsToggle={() => setIsSettingsOpen(!isSettingsOpen)}
+        />
       </Box>
+      
+      <SettingsDrawer 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+      
       <style jsx>{`
         :global(*) {
           cursor: url('/cursor/white-7.png') 7 7, auto !important;
@@ -111,7 +121,7 @@ const Landing: FC = () => {
         draw={draw}
         windowResized={windowResized}
         mouseClicked={mouseClicked}
-        mouseWheel={mouseWheel}
+        mouseWheel={(p5, event) => mouseWheel(p5, event, isSettingsOpen)}
         keyPressed={keyPressed}
       />
     </Box>

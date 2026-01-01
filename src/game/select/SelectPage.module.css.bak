@@ -1,0 +1,187 @@
+/**
+ * SelectPage component styles
+ */
+
+.container {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header header"
+    "leftPanel songWheel rightPanel"
+    "bottomPanel songWheel filterPanel";
+  height: 100vh;
+  width: 100vw;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+  overflow: hidden;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+}
+
+/* Header */
+.header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-dark);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-card);
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-shadow: 0 0 10px var(--color-primary-glow);
+  text-align: center;
+}
+
+/* Left Panel - Player Info */
+.leftPanel {
+  grid-area: leftPanel;
+  background: var(--color-surface-dark);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* Right Panel - Song Display */
+.rightPanel {
+  grid-area: rightPanel;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-dark);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.songDisplay {
+  flex: 0 0 auto;
+  height: 240px;
+}
+
+.scoresList {
+  flex: 1 1 auto;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+/* Right Panel - Filters */
+.rightPanel {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bottom - Song Wheel */
+.songWheel {
+  grid-area: wheel;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 20%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.2) 80%,
+    transparent 100%
+  );
+  border-radius: var(--border-radius-lg);
+}
+
+/* Loading overlay */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-surface-light);
+  border-top: 3px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .container {
+    grid-template-columns: 1fr 280px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .container {
+    grid-template-areas: 
+      "header"
+      "right"
+      "left"
+      "wheel";
+    grid-template-columns: 1fr;
+    grid-template-rows: 80px 200px 1fr 180px;
+  }
+  
+  .leftPanel {
+    flex-direction: row;
+    gap: var(--spacing-md);
+  }
+  
+  .songDisplay {
+    flex: 0 0 300px;
+    height: auto;
+  }
+  
+  .scoresList {
+    flex: 1 1 auto;
+    min-height: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    grid-template-rows: 60px 180px 1fr 160px;
+  }
+  
+  .leftPanel {
+    flex-direction: column;
+  }
+  
+  .songDisplay {
+    flex: 0 0 auto;
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-xs);
+    gap: var(--spacing-xs);
+  }
+}

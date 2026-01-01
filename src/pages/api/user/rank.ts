@@ -1,0 +1,90 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { getAuth } from '@clerk/nextjs/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Get the user ID from Clerk
+    const { userId: clerkUserId } = getAuth(req);
+    
+    if (!clerkUserId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // First, find the user in the Auth table using the Clerk user ID
+    // For now, we'll use email or userName as the connection point
+    // since we need to establish the link between Clerk and our database
+    
+    // Option 1: If the userName in Auth table matches Clerk username
+    // Option 2: If email in Auth table matches Clerk email
+    // Option 3: If we store Clerk user ID in a separate field
+    
+    // For now, let's assume we can identify the user by their Clerk user ID
+    // stored in the email field or we'll need to create a mapping
+    
+    // Let's try to find by Clerk user ID (assuming it's stored somewhere)
+    // For development, we'll create a simple approach:
+    
+    const auth = await prisma.auth.findFirst({
+      where: {
+        // We'll need to establish this connection
+        // For now, let's find by email if available
+        email: clerkUserId // This is a placeholder - we need proper mapping
+      },
+      include: {
+        user: {
+          include: {
+            userType: true
+          }
+        }
+      }
+    });
+
+    if (!auth) {
+      // User not found in database - they might need to be created
+      return res.status(404).json({ error: 'User not found in database' });
+    }
+
+    const user = auth.user;
+    
+    // Calculate rank based on pp (performance points)
+    const usersWithHigherPp = await prisma.user.count({
+      where: {
+        pp: {
+          gt: user.pp
+        }
+      }
+    });
+    
+    const rank = usersWithHigherPp + 1;
+    
+    // Calculate percentile
+    const totalUsers = await prisma.user.count();
+    const percentile = totalUsers > 0 ? Math.round((1 - (rank - 1) / totalUsers) * 100) : 100;
+    
+    const rankData = {
+      rank,
+      pp: user.pp,
+      exp: user.exp,
+      totalPlayTime: user.totalPlayTime,
+      userType: user.userTypeName,
+      userTypeDesc: user.userType?.userTypeDesc || '',
+      totalUsers,
+      percentile
+    };
+
+    return res.status(200).json(rankData);
+    
+  } catch (error) {
+    console.error('Error fetching user rank:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    await prisma.$disconnect();
+  }
+}

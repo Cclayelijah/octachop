@@ -1,0 +1,243 @@
+/**
+ * SongWheel component styles - Clean, modern design matching mockup
+ */
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.songList {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.songItem {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  outline: none;
+}
+
+.songItem:hover,
+.songItem.hovered {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.songItem.selected {
+  background: rgba(139, 90, 150, 0.15);
+  border-color: rgba(139, 90, 150, 0.6);
+  box-shadow: 0 4px 20px rgba(139, 90, 150, 0.3);
+}
+
+.songItem.selected:hover {
+  background: rgba(139, 90, 150, 0.2);
+}
+
+.songInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.songTitle {
+  font-weight: 600;
+  font-size: 1rem;
+  color: white;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.songArtist {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.songDetails {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  align-items: center;
+}
+
+.difficulty {
+  color: #ffd700;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.levels {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Level Selector - Clean difficulty buttons */
+.levelSelector {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.levelButton {
+  background: rgba(139, 90, 150, 0.3);
+  border: 1px solid rgba(139, 90, 150, 0.5);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 70px;
+  justify-content: space-between;
+}
+
+.levelButton:hover {
+  background: rgba(139, 90, 150, 0.5);
+  transform: scale(1.02);
+}
+
+.levelButton:active {
+  transform: scale(0.98);
+}
+
+.levelName {
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.levelStars {
+  color: #ffd700;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* Loading state */
+.loading {
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.loadingSkeleton {
+  height: 80px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  border-radius: var(--border-radius-md);
+  animation: shimmer 1.5s infinite linear;
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Empty state */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--spacing-lg);
+}
+
+.empty p {
+  margin: var(--spacing-xs) 0;
+  opacity: 0.8;
+}
+
+.empty p:first-child {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Scrollbar styling */
+.songList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.songList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.songList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.songList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .songItem {
+    padding: var(--spacing-sm);
+  }
+  
+  .songTitle {
+    font-size: 1rem;
+  }
+  
+  .songDetails {
+    gap: var(--spacing-sm);
+  }
+  
+  .levelSelector {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 768px) {
+  .songDetails {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .levelButton {
+    min-width: 70px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Focus states for accessibility */
+.songItem:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.levelButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
