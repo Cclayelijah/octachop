@@ -198,10 +198,7 @@ export const mouseWheel = (p5, event) => {
   showVolumeDisplay = true;
   volumeDisplayTimer = p.millis();
   
-  // Ensure the sketch is looping so the volume display can update
-  if (!started || paused) {
-    p.loop();
-  }
+  // Visual loop should always be running now
   
   // Prevent default scroll behavior
   if (event.preventDefault) {
@@ -232,7 +229,7 @@ const handlePause = () => {
     context.resume().then(() => {
       songs[songNum].play();
       console.log("play");
-      p.loop();
+      // Keep visual loop running - removed p.loop()
       isHandlingPause = false; // Reset guard after operation completes
     }).catch((error) => {
       console.error('Error resuming context:', error);
@@ -242,7 +239,7 @@ const handlePause = () => {
     console.log('Pausing playback...');
     songs[songNum].pause();
     console.log("pause");
-    p.noLoop();
+    // Keep visual loop running - removed p.noLoop()
     isHandlingPause = false; // Reset guard immediately for pause
   }
   paused = !paused;
@@ -318,16 +315,23 @@ export const draw = (p5) => {
     }
     if (canvas) canvas.drawingContext.shadowBlur = 0 * px;
 
-    if (paused) return;
-    let particle = new Particle(px, edgeLength, p, canvas);
-    particles.push(particle);
+    // Always render existing particles, even when paused
     for (let i = particles.length - 1; i >= 0; i--) {
       if (particles[i].edges()) {
         particles.splice(i, 1);
       } else {
-        particles[i].update(amp > 210);
+        // Only update particles if not paused (they freeze in place when paused)
+        if (!paused) {
+          particles[i].update(amp > 210);
+        }
         particles[i].show(p);
       }
+    }
+    
+    // Only create new particles when not paused
+    if (!paused) {
+      let particle = new Particle(px, edgeLength, p, canvas);
+      particles.push(particle);
     }
   } else {
     p.textSize(32);
@@ -403,9 +407,6 @@ const drawVolumeDisplay = (p5) => {
     // Hide the volume display after duration
     showVolumeDisplay = false;
     
-    // If music was paused and not started, go back to paused state
-    if (paused && started) {
-      p.noLoop();
-    }
+    // Visual loop should always be running now - removed p.noLoop()
   }
 };
