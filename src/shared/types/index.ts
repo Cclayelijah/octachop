@@ -1,77 +1,94 @@
 /**
- * TypeScript interfaces for the song selection page
+ * TypeScript interfaces matching the actual Prisma schema
  */
 
 import { LetterGrade } from '../utils/grading';
 
-// Base Prisma model types (matching your schema)
+// Base Prisma model types (matching actual schema)
 export interface User {
   userId: number;
   userTypeName: string;
   totalPlayTime: number;
   exp: number;
-  createdAt: Date;
-  updatedAt: Date;
+  pp: number;
 }
 
 export interface Auth {
+  authId: number;
   userId: number;
-  username: string;
-  email?: string;
+  email: string;
+  password: string;
+  phone: string;
+  userName: string;
 }
 
 export interface Song {
   songId: number;
-  songTitle: string;
-  songArtist: string;
-  audioFileName: string;
-  backgroundFileName?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  beatmapSetId: number;
+  songUrl: string;
+  defaultImg: string;
+  title: string;
+  titleUnicode: string;
+  artist: string;
+  artistUnicode: string;
+  active: boolean;
 }
 
 export interface Level {
   levelId: number;
   songId: number;
-  difficulty: number;
-  beatmapFileName: string;
-  levelName?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  beatmapId: number;
+  difficulty: number; // Decimal from Prisma
+  image: string;
+  approachRate: number; // Decimal from Prisma
+  noteData: any[]; // Json[] from Prisma
+  breakData: any[]; // Json[] from Prisma
+  beatmapUrl: string;
+  active: boolean;
 }
 
 export interface PassResult {
   passResultId: number;
   userId: number;
   levelId: number;
+  timestamp: number;
   score: number;
   hits: number;
   misses: number;
-  maxCombo: number;
-  createdAt: Date;
+  healthBarData: number;
+  replayData: number;
 }
 
-// Enhanced types with computed properties
+// Enhanced types with computed properties and relationships
 export interface SongWithLevels extends Song {
   levels: Level[];
   isFavorite?: boolean;
   maxDifficulty: number;
   minDifficulty: number;
-  duration?: number; // in seconds
-  previewUrl?: string;
+  duration?: number; // in seconds, calculated from audio
 }
 
-export interface ScoreWithDetails extends PassResult {
-  letterGrade: LetterGrade;
-  accuracy: number;
-  level: Level;
-  rank?: number; // position in leaderboard
+export interface LevelWithSong extends Level {
+  song: Song;
+}
+
+export interface PassResultWithDetails extends PassResult {
+  level: LevelWithSong;
+  user: User;
+  accuracy: number; // computed: hits / (hits + misses)
+  grade: LetterGrade;
+  formattedDate: string;
 }
 
 export interface PlayerInfo extends User {
-  username: string;
+  username: string; // from Auth table
   rank?: number;
   rankTitle?: string;
+  recentScores?: PassResultWithDetails[];
+}
+
+export interface ScoreWithDetails extends PassResultWithDetails {
+  rank?: number; // position in leaderboard
 }
 
 // Component prop interfaces
