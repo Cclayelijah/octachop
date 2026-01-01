@@ -2334,9 +2334,33 @@ export const handleStart = () => {
 
 const Play: FC = () => {
   useEffect(() => {
+    // Enhanced Safari mobile scroll prevention
+    const preventTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Add aggressive touch and scroll prevention for Safari
+    document.addEventListener('touchmove', preventTouchMove, { passive: false });
+    document.addEventListener('touchstart', preventTouchMove, { passive: false });
+    document.addEventListener('scroll', preventScroll, { passive: false });
+    document.addEventListener('wheel', preventScroll, { passive: false });
+    
+    // Prevent Safari's pull-to-refresh and bounce scrolling
+    document.body.style.overscrollBehavior = 'none';
+    document.documentElement.style.overscrollBehavior = 'none';
+
     // Cleanup on unmount - reset the active sketch
     return () => {
       setActiveSketch(null);
+      document.removeEventListener('touchmove', preventTouchMove);
+      document.removeEventListener('touchstart', preventTouchMove);
+      document.removeEventListener('scroll', preventScroll);
+      document.removeEventListener('wheel', preventScroll);
     };
   }, []);
 
@@ -2350,6 +2374,7 @@ const Play: FC = () => {
           width: 100% !important;
           top: 0 !important;
           left: 0 !important;
+          -webkit-overflow-scrolling: none !important;
         }
         :global(canvas) {
           cursor: url('/cursor/white-7.png') 7 7, auto !important;
@@ -2357,8 +2382,26 @@ const Play: FC = () => {
         }
         :global(body) {
           touch-action: none !important;
-          -webkit-overflow-scrolling: touch !important;
+          -webkit-overflow-scrolling: none !important;
           overscroll-behavior: none !important;
+          -webkit-user-select: none !important;
+          -webkit-touch-callout: none !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        :global(*) {
+          touch-action: none !important;
+          -webkit-overflow-scrolling: none !important;
+          overscroll-behavior: none !important;
+          -webkit-user-select: none !important;
+          -webkit-touch-callout: none !important;
+        }
+        :global(#__next) {
+          height: 100vh !important;
+          overflow: hidden !important;
+          position: fixed !important;
+          width: 100% !important;
+          top: 0 !important;
+          left: 0 !important;
         }
       `}</style>
       <Sketch
