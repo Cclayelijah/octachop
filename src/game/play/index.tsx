@@ -12,6 +12,7 @@ import {
   setup,
   start,
   windowResized,
+  cleanup,
 } from "./sketch";
 import { loadP5Sound } from "../lib/p5SoundLoader";
 import { setActiveSketch } from "../lib/sketchManager";
@@ -2356,6 +2357,8 @@ const Play: FC = () => {
 
     // Cleanup on unmount - reset the active sketch
     return () => {
+      // Clean up play page audio and resources
+      cleanup();
       setActiveSketch(null);
       document.removeEventListener('touchmove', preventTouchMove);
       document.removeEventListener('touchstart', preventTouchMove);
