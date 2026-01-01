@@ -1,0 +1,116 @@
+/**
+ * PlayerInfo component styles
+ */
+
+.container {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+}
+
+.playerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.username {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.rankInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.rankNumber {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-accent-gold);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.rankTitle {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Loading skeleton */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 200px;
+}
+
+.skeletonText {
+  height: 28px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 0%,
+    var(--color-surface-accent) 50%,
+    var(--color-surface-light) 100%
+  );
+  border-radius: var(--border-radius-sm);
+  animation: shimmer 1.5s infinite;
+}
+
+.skeletonSubtext {
+  height: 16px;
+  width: 120px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 0%,
+    var(--color-surface-accent) 50%,
+    var(--color-surface-light) 100%
+  );
+  border-radius: var(--border-radius-sm);
+  animation: shimmer 1.5s infinite;
+  animation-delay: 0.2s;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.errorState .username {
+  opacity: 0.7;
+}
+
+.errorState .rank {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .username {
+    font-size: 1.5rem;
+  }
+  
+  .rankNumber {
+    font-size: 0.9rem;
+  }
+  
+  .rankTitle {
+    font-size: 0.8rem;
+  }
+}

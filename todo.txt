@@ -1,0 +1,4 @@
+Song Select Page:
+  - Make "start" button a circle that beats to the rhythm of the music.
+  - Update scroll functionality to be audio knob instead.
+  - Can drag with mouse to move song wheel.

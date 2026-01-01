@@ -1,8 +1,8 @@
-import Browse from "src/game/browse";
+import Select from "src/game/select";
 import Head from "next/head";
 
 
-export const BrowsePage = (): JSX.Element => (
+export const SelectPage = (): JSX.Element => (
   <>
     <div>
       <Head>
@@ -11,10 +11,10 @@ export const BrowsePage = (): JSX.Element => (
       </Head>
 
       <section>
-        <Browse />
+        <Select />
       </section>
     </div>
   </>
 );
 
-export default BrowsePage;
+export default SelectPage;

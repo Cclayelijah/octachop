@@ -91,7 +91,7 @@ const Landing: FC = () => {
         </Box>
         <Box display="flex" justifyContent="space-between">
           <Image src="/images/settings.png" alt="Settings" width={60} height={60} />
-          <Link href="/browse">
+          <Link href="/select">
             <Image src="/images/arrow1.png" alt="Start Button" width={100} height={60} />
           </Link>
         </Box>
