@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './SelectPage.module.css';
-import { PlayerInfo as PlayerInfoComponent } from './components';
+import { PlayerInfo as PlayerInfoComponent, GoPlay } from './components';
 import ScoresList from './components/ScoresList/ScoresList';
 import SongWheel from './components/SongWheel/SongWheel';
 import FilterPanel from './components/FilterPanel/FilterPanel';
@@ -199,6 +199,44 @@ const SelectPage: React.FC = () => {
     setFilteredSongs(filtered);
   }, [songs, filters]);
 
+  // Keyboard navigation for difficulty selection
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!selectedSong || selectedSong.levels.length <= 1) return;
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        
+        const currentLevelIndex = selectedLevel 
+          ? selectedSong.levels.findIndex(l => l.levelId === selectedLevel.levelId)
+          : 0;
+        
+        let newIndex: number;
+        
+        if (event.key === 'ArrowLeft') {
+          // Go to previous difficulty
+          newIndex = currentLevelIndex > 0 ? currentLevelIndex - 1 : selectedSong.levels.length - 1;
+        } else {
+          // Go to next difficulty  
+          newIndex = currentLevelIndex < selectedSong.levels.length - 1 ? currentLevelIndex + 1 : 0;
+        }
+        
+        const newLevel = selectedSong.levels[newIndex];
+        if (newLevel) {
+          setSelectedLevel(newLevel);
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyPress);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [selectedSong, selectedLevel]);
+
   const handleSongSelect = (song: SongWithLevels) => {
     setSelectedSongId(song.songId);
     // Auto-select first level
@@ -295,6 +333,11 @@ const SelectPage: React.FC = () => {
         >
           ‹‹‹
         </button>
+      </div>
+
+      {/* Play Button - Bottom Right Corner */}
+      <div className={styles.playButton}>
+        <GoPlay disabled={!selectedSong || !selectedLevel} />
       </div>
     </div>
   );
