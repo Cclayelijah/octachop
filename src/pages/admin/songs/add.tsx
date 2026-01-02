@@ -1,7 +1,7 @@
 import Head from "next/head";
-import AddTrackSet from "src/game/admin/tracks/AddTrackSet";
+import AddSong from "src/game/admin/songs/AddSong";
 
-const AddTrackSetPage = (): JSX.Element => (
+const AddSongPage = (): JSX.Element => (
   <>
     <div>
       <Head>
@@ -10,10 +10,10 @@ const AddTrackSetPage = (): JSX.Element => (
       </Head>
 
       <section>
-        <AddTrackSet />
+        <AddSong />
       </section>
     </div>
   </>
 );
 
-export default AddTrackSetPage;
+export default AddSongPage;

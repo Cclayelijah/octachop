@@ -1,10 +1,10 @@
 import React from "react";
-import AdminTracks from "./tracks/Tracks";
+import AdminSongs from "./songs/Songs";
 
 type Props = {};
 
 function Admin({}: Props) {
-  return <AdminTracks />;
+  return <AdminSongs />;
 }
 
 export default Admin;

@@ -1,7 +1,7 @@
 import Head from "next/head";
-import AdminTracks from "src/game/admin/tracks/Tracks";
+import AdminSongs from "src/game/admin/songs/Songs";
 
-const Tracks = (): JSX.Element => (
+const Songs = (): JSX.Element => (
   <>
     <div>
       <Head>
@@ -10,10 +10,10 @@ const Tracks = (): JSX.Element => (
       </Head>
 
       <section>
-        <AdminTracks />
+        <AdminSongs />
       </section>
     </div>
   </>
 );
 
-export default Tracks;
+export default Songs;

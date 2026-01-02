@@ -19,13 +19,13 @@ import React, { useState } from "react";
 import PageHeading from "../../PageHeading";
 import Panel from "../../Panel";
 import { BodyContainer } from "../../styles";
-import TrackInfo from "./TrackInfo";
+import SongInfo from "./SongInfo";
 import { createClient } from "@supabase/supabase-js";
 import { any } from "zod";
 import extractData from "src/game/extractData";
 
 const supabaseurl:string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
-const supabasekey:string = process.env.NEXT_PUBLIC_SUPABASE_KEY ?? ""
+const supabasekey:string = process.env.NEXT_SECRET_SUPABASE_KEY ?? ""
 const supabase = createClient(supabaseurl, supabasekey);
 
 type Props = {};
@@ -73,10 +73,10 @@ type Level = {
   active?: boolean
 }
 
-export default function AddTrackSet({}: Props) {
+export default function AddSongSet({}: Props) {
   const [images, setImages] = useState<MyImage[]>([]);
   const [defaultImage, setDefaultImage] = useState<string>();
-  const [trackFiles, setTrackFiles] = useState<File[]>([]);
+  const [songFiles, setSongFiles] = useState<File[]>([]);
   const [songFile, setSongFile] = useState<File>();
   const [levelData, setLevelData] = useState<LevelData[]>([])
   const [songTitle, setSongTitle] = useState('')
@@ -130,8 +130,8 @@ export default function AddTrackSet({}: Props) {
     }
     // 3. configure levels
     const levels: Level[] = []
-    for (let i=0; i < trackFiles.length; i++) {
-      const track = trackFiles[i]
+    for (let i=0; i < songFiles.length; i++) {
+      const track = songFiles[i]
       const level = levelData[i]
       console.log('Saving track file: ' + setDir + track?.name)
       const trackPath = 'https://mzvkxfaggqbdhudnwxqc.supabase.co/storage/v1/object/public/track-data/' + setDir + track?.name
@@ -267,7 +267,7 @@ export default function AddTrackSet({}: Props) {
       levels.push(levelData)
     }
     setLevelData(levels)
-    setTrackFiles(files);
+    setSongFiles(files);
   };
 
   const updateSong = (e: any) => {
@@ -285,7 +285,7 @@ export default function AddTrackSet({}: Props) {
     <Box display="flex" bgcolor="#ffffff" color="#000000">
       <Panel />
       <BodyContainer>
-        <PageHeading title="Add Song Tracks" />
+        <PageHeading title="Add Song" />
         <PageContent>
           <form
             onSubmit={handleSubmit}
@@ -379,8 +379,8 @@ export default function AddTrackSet({}: Props) {
                   }}
                 >
                   <List itemType="">
-                    {trackFiles &&
-                      trackFiles.map((file) => {
+                    {songFiles &&
+                      songFiles.map((file: File) => {
                         return (
                           <ListItem>
                             <Typography>{file.name}</Typography>
@@ -427,8 +427,8 @@ export default function AddTrackSet({}: Props) {
             {beatmapSetId && <Box>
               <Typography>BeatmapSetId: {beatmapSetId}</Typography>
             </Box>}
-            {trackFiles && trackFiles.length > 0 && (
-              <TrackInfo 
+            {songFiles && songFiles.length > 0 && (
+              <SongInfo 
                 title={songTitle}
                 setTitle={setSongTitle}
                 titleUnicode={songTitleUnicode}

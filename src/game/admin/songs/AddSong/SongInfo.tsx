@@ -12,7 +12,7 @@ type Props = {
   setArtistUnicode: React.Dispatch<React.SetStateAction<string>>
 };
 
-export default function TrackInfo({ 
+export default function SongInfo({ 
   title, 
   setTitle, 
   titleUnicode, 

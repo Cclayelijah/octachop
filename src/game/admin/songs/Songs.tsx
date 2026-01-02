@@ -9,12 +9,12 @@ import { BodyContainer } from "../styles";
 
 type Props = {};
 
-export default function AdminTracks({}: Props) {
+export default function AdminSongs({}: Props) {
   return (
     <Box display="flex" bgcolor="#ffffff" color="#000000">
       <Panel />
       <BodyContainer>
-        <PageHeading title="Track Sets" addButtonLink="/admin/tracks/add" />
+        <PageHeading title="Songs" addButtonLink="/admin/songs/add" />
       </BodyContainer>
     </Box>
   );

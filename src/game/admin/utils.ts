@@ -1,11 +1,11 @@
-import Tracks from "./tracks/Tracks";
+import Songs from "./songs/Songs";
 import Users from "./users/Users";
 
 export const AdminRoute = [
   {
-    name: "Tracks",
-    path: "/tracks",
-    component: Tracks,
+    name: "Songs",
+    path: "/songs",
+    component: Songs,
     exact: true,
   },
   {
