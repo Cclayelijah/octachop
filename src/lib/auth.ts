@@ -17,7 +17,7 @@ export async function getCurrentUser() {
       return null
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { clerkId: userId },
       include: {
         userType: true
