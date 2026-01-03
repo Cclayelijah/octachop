@@ -13,7 +13,7 @@ import styles from './SelectPage.module.css';
 import { PlayerInfo as PlayerInfoComponent, GoPlay } from './components';
 import ScoresList from './components/ScoresList/ScoresList';
 import SongWheel from './components/SongWheel/SongWheel';
-import FilterPanel from './components/FilterPanel/FilterPanel';
+import FilterPanel from './components/FilterPanel';
 import { 
   SongWithLevels, 
   PlayerInfo as PlayerInfoType, 
@@ -81,6 +81,9 @@ const SelectPage: React.FC = () => {
   
   // Dynamic background colors
   const [backgroundGradient, setBackgroundGradient] = useState<string>('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)');
+  
+  // User favorites
+  const [userFavorites, setUserFavorites] = useState<number[]>([]);
 
   // Extract dominant colors from image
   const extractColorsFromImage = (imageUrl: string): Promise<string[]> => {
@@ -349,11 +352,12 @@ const SelectPage: React.FC = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch user info, songs, and scores in parallel
-        const [userResponse, songsResponse, scoresResponse] = await Promise.all([
+        // Fetch user info, songs, scores, and favorites in parallel
+        const [userResponse, songsResponse, scoresResponse, favoritesResponse] = await Promise.all([
           fetch('/api/user/me'),
           fetch('/api/song'),
-          fetch('/api/user/scores')
+          fetch('/api/user/scores'),
+          fetch('/api/user/favorites')
         ]);
 
         // Handle user data
@@ -364,6 +368,15 @@ const SelectPage: React.FC = () => {
           console.error('Failed to fetch user data');
         }
 
+        // Handle favorites data
+        let favoriteIds: number[] = [];
+        if (favoritesResponse.ok) {
+          favoriteIds = await favoritesResponse.json();
+          setUserFavorites(favoriteIds);
+        } else {
+          console.error('Failed to fetch favorites');
+        }
+
         // Handle songs data
         if (songsResponse.ok) {
           const songsData = await songsResponse.json();
@@ -371,7 +384,6 @@ const SelectPage: React.FC = () => {
             ...song,
             maxDifficulty: Math.max(...song.levels.map((l: Level) => l.difficulty)),
             minDifficulty: Math.min(...song.levels.map((l: Level) => l.difficulty)),
-            isFavorite: false // TODO: Implement favorites system
           }));
           setSongs(processedSongs);
           setFilteredSongs(processedSongs);
@@ -453,7 +465,7 @@ const SelectPage: React.FC = () => {
       }
 
       // Favorites filter
-      if (filters.showFavoritesOnly && !song.isFavorite) {
+      if (filters.showFavoritesOnly && !userFavorites.includes(song.songId)) {
         return false;
       }
 
@@ -461,7 +473,7 @@ const SelectPage: React.FC = () => {
     });
 
     setFilteredSongs(filtered);
-  }, [songs, filters]);
+  }, [songs, filters, userFavorites]);
 
   // Keyboard navigation for difficulty selection
   useEffect(() => {
@@ -566,6 +578,31 @@ const SelectPage: React.FC = () => {
         // Navigate to play page with selected level
         console.log('Starting level:', level);
       }
+    }
+  };
+
+  const handleToggleFavorite = async (songId: number) => {
+    try {
+      const response = await fetch('/api/user/favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ songId }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.favorited) {
+          setUserFavorites(prev => [...prev, songId]);
+        } else {
+          setUserFavorites(prev => prev.filter(id => id !== songId));
+        }
+      } else {
+        console.error('Failed to toggle favorite');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 
@@ -836,6 +873,8 @@ const SelectPage: React.FC = () => {
           selectedSongId={selectedSongId}
           onSongSelect={handleSongSelect}
           onLevelSelect={handleLevelSelect}
+          onToggleFavorite={handleToggleFavorite}
+          userFavorites={userFavorites}
           loading={isLoading}
         />
       </div>

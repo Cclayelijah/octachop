@@ -32,6 +32,7 @@ model User {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   PassResult    PassResult[]
+  favorites     UserFavorites[]
   userType      UserType     @relation(fields: [userTypeName], references: [userTypeName])
 }
 
@@ -57,7 +58,8 @@ model Song {
   artistUnicode String
   active        Boolean @default(true)
   disabledOn    DateTime? // Null means not disabled, date means disabled timestamp
-  levels        Level[] 
+  levels        Level[]
+  favoritedBy   UserFavorites[]
 }
 
 model Level {
@@ -89,4 +91,15 @@ model PassResult {
   replayData    Int
   level         Level @relation(fields: [levelId], references: [levelId])
   user          User  @relation(fields: [userId], references: [userId])
+}
+
+model UserFavorites {
+  userId   Int
+  songId   Int
+  favoritedAt DateTime @default(now())
+  user     User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  song     Song @relation(fields: [songId], references: [songId], onDelete: Cascade)
+
+  @@id([userId, songId])
+  @@map("user_favorites")
 }

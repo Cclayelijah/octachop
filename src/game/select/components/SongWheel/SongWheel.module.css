@@ -241,3 +241,37 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
 }
+
+/* Favorite Heart Icon */
+.favoriteButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.favoriteButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.heartIcon {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.heartIcon.favorited {
+  color: #ff4757;
+  text-shadow: 0 0 8px rgba(255, 71, 87, 0.4);
+}

@@ -7,6 +7,8 @@ interface SongWheelProps {
   selectedSongId: number | null;
   onSongSelect: (song: SongWithLevels) => void;
   onLevelSelect: (levelId: number) => void;
+  onToggleFavorite?: (songId: number) => void;
+  userFavorites?: number[];
   loading?: boolean;
 }
 
@@ -15,6 +17,8 @@ const SongWheel: React.FC<SongWheelProps> = ({
   selectedSongId,
   onSongSelect,
   onLevelSelect,
+  onToggleFavorite,
+  userFavorites = [],
   loading = false
 }) => {
   const [hoveredSongId, setHoveredSongId] = useState<number | null>(null);
@@ -88,6 +92,7 @@ const SongWheel: React.FC<SongWheelProps> = ({
         {songs.map((song, index) => {
           const isSelected = song.songId === selectedSongId;
           const isHovered = song.songId === hoveredSongId;
+          const isFavorited = userFavorites.includes(song.songId);
           
           // Calculate difficulty range
           const difficulties = song.levels.map(level => level.difficulty);
@@ -112,6 +117,22 @@ const SongWheel: React.FC<SongWheelProps> = ({
                   <span className={styles.levels}>{song.levels.length} level{song.levels.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
+              
+              {/* Favorite Heart Icon */}
+              {onToggleFavorite && (
+                <button
+                  className={styles.favoriteButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(song.songId);
+                  }}
+                  title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <span className={`${styles.heartIcon} ${isFavorited ? styles.favorited : ''}`}>
+                    {isFavorited ? '♥' : '♡'}
+                  </span>
+                </button>
+              )}
               
               {/* Level selector for selected song */}
               {isSelected && song.levels.length > 0 && (
