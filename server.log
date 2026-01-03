@@ -1,0 +1,39 @@
+
+> dev
+> next dev -p 3000
+
+  ▲ Next.js 13.5.6
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+  - Experiments (use at your own risk):
+     · esmExternals
+
+ ✓ Ready in 1319ms
+ ✓ Compiled /admin/users in 812ms (1512 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled /api/admin/users in 92ms (430 modules)
+Error in admin/users API: Error: Clerk: getAuth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at C:\Users\Elijah\programming\octachop\node_modules\@clerk\nextjs\dist\cjs\server\createGetAuth.js:51:13
+    at C:\Users\Elijah\programming\octachop\node_modules\@clerk\nextjs\dist\cjs\utils\debugLogger.js:71:19
+    at handle (webpack-internal:///(api)/./src/pages/api/admin/users.ts:65:89)
+    at C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\next-server\pages-api.runtime.dev.js:21:3039
+    at C:\Users\Elijah\programming\octachop\node_modules\next\dist\server\lib\trace\tracer.js:121:36
+    at NoopContextManager.with (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7057)
+    at ContextAPI.with (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:516)
+    at NoopTracer.startActiveSpan (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18086)
+    at ProxyTracer.startActiveSpan (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18847)
+    at C:\Users\Elijah\programming\octachop\node_modules\next\dist\server\lib\trace\tracer.js:110:107
+    at NoopContextManager.with (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7057)
+    at ContextAPI.with (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:516)
+    at NextTracerImpl.trace (C:\Users\Elijah\programming\octachop\node_modules\next\dist\server\lib\trace\tracer.js:110:32)
+    at K (C:\Users\Elijah\programming\octachop\node_modules\next\dist\compiled\next-server\pages-api.runtime.dev.js:21:2970)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+ ✓ Compiled /admin/users in 351ms (1516 modules)
+ ✓ Compiled /_error in 58ms (1518 modules)
+^C

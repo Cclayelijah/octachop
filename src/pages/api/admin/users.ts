@@ -1,34 +1,70 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { getAuth } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
 
 const prisma = new PrismaClient()
 
-// Server-side function to get current user in API routes
-async function getCurrentUserServer() {
-  try {
-    const { userId } = auth()
-    
-    if (!userId) {
-      return null
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      include: {
-        userType: true
+// Calculate user rank based on PP (how many users have higher PP)
+async function calculateUserRank(userPp: number): Promise<number> {
+  const usersWithHigherPp = await prisma.user.count({
+    where: {
+      pp: {
+        gt: userPp
       }
-    })
-
-    return user
-  } catch (error) {
-    console.error('Error getting current user:', error)
-    return null
-  }
+    }
+  })
+  
+  return usersWithHigherPp + 1 // Rank is 1-indexed (1st place, 2nd place, etc.)
 }
 
-function isSuperAdmin(user: any): boolean {
-  return user && user.userType && user.userType.userTypeName === 'superadmin'
+// Get all users with their calculated rank
+async function getAllUsersWithRanks() {
+  // First get all users ordered by PP descending
+  const users = await prisma.user.findMany({
+    include: {
+      userType: true
+    },
+    orderBy: {
+      pp: 'desc'
+    }
+  })
+
+  // Calculate ranks efficiently by iterating through sorted list
+  const usersWithRanks = users.map((user, index) => ({
+    userId: user.userId,
+    clerkId: user.clerkId,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    username: user.username || user.email,
+    imageUrl: user.imageUrl,
+    userTypeName: user.userTypeName,
+    bannedUntil: user.bannedUntil,
+    totalPlayTime: user.totalPlayTime,
+    exp: user.exp,
+    pp: user.pp,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    rank: index + 1, // Since sorted by PP desc, index + 1 = rank
+    userType: user.userType
+  }))
+
+  return usersWithRanks
+}
+
+// Search users by username or ID
+function searchUsers(users: any[], searchTerm: string) {
+  if (!searchTerm) return users
+  
+  const lowerSearchTerm = searchTerm.toLowerCase()
+  
+  return users.filter(user => 
+    user.username?.toLowerCase().includes(lowerSearchTerm) ||
+    user.email?.toLowerCase().includes(lowerSearchTerm) ||
+    user.userId.toString() === searchTerm ||
+    user.firstName?.toLowerCase().includes(lowerSearchTerm) ||
+    user.lastName?.toLowerCase().includes(lowerSearchTerm)
+  )
 }
 
 export default async function handle(
@@ -36,67 +72,104 @@ export default async function handle(
   res: NextApiResponse
 ) {
   try {
-    // Check if current user is authenticated and has proper permissions
-    const currentUser = await getCurrentUserServer()
-    if (!currentUser) {
-      return res.status(401).json({ error: 'Not authenticated' })
+    // Verify admin access
+    const { userId } = getAuth(req)
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
     }
+
+    // Get current user to check if they're admin
+    const currentUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      include: { userType: true }
+    })
+
+    if (!currentUser || (currentUser.userTypeName !== 'admin' && currentUser.userTypeName !== 'superadmin')) {
+      return res.status(403).json({ error: 'Admin access required' })
+    }
+
+    const isSuperAdmin = currentUser.userTypeName === 'superadmin'
 
     switch (req.method) {
       case 'GET':
-        // List all users (admins can view)
-        if (currentUser.userTypeName === 'user') {
-          return res.status(403).json({ error: 'Admin access required' })
+        // Get search parameter
+        const { search } = req.query
+        const searchTerm = typeof search === 'string' ? search : ''
+
+        // Get all users with ranks
+        let users = await getAllUsersWithRanks()
+
+        // Apply search filter if provided
+        if (searchTerm) {
+          users = searchUsers(users, searchTerm)
         }
 
-        const users = await prisma.user.findMany({
-          include: {
-            userType: true
-          },
-          orderBy: {
-            createdAt: 'desc'
+        // Return users with additional metadata
+        return res.json({
+          users,
+          totalUsers: users.length,
+          currentUser: {
+            userId: currentUser.userId,
+            userTypeName: currentUser.userTypeName,
+            isSuperAdmin
           }
         })
-        return res.status(200).json({ users })
 
-      case 'PUT':
-        // Update user role (only superadmins can change roles)
-        if (!isSuperAdmin(currentUser)) {
-          return res.status(403).json({ error: 'Super admin access required to change user roles' })
+      case 'PATCH':
+        // Update user (ban/unban for admins, role change for superadmins)
+        const { userId: targetUserId, bannedUntil, userTypeName } = req.body
+
+        if (!targetUserId) {
+          return res.status(400).json({ error: 'User ID is required' })
         }
 
-        const { userId, userTypeName } = req.body
-        
-        if (!userId || !userTypeName) {
-          return res.status(400).json({ error: 'userId and userTypeName are required' })
+        const updateData: any = {}
+
+        // Handle ban/unban (admins and superadmins can do this)
+        if (bannedUntil !== undefined) {
+          updateData.bannedUntil = bannedUntil ? new Date(bannedUntil) : null
         }
 
-        // Validate role exists
-        const roleExists = await prisma.userType.findUnique({
-          where: { userTypeName }
-        })
-
-        if (!roleExists) {
-          return res.status(400).json({ error: 'Invalid role' })
+        // Handle role change (only superadmins can do this)
+        if (userTypeName !== undefined) {
+          if (!isSuperAdmin) {
+            return res.status(403).json({ error: 'Superadmin access required for role changes' })
+          }
+          
+          // Validate userTypeName
+          const validRoles = ['user', 'admin', 'superadmin']
+          if (!validRoles.includes(userTypeName)) {
+            return res.status(400).json({ error: 'Invalid user type' })
+          }
+          
+          updateData.userTypeName = userTypeName
         }
 
+        if (Object.keys(updateData).length === 0) {
+          return res.status(400).json({ error: 'No valid update fields provided' })
+        }
+
+        // Update the user
         const updatedUser = await prisma.user.update({
-          where: { userId: parseInt(userId) },
-          data: { userTypeName },
+          where: { userId: parseInt(targetUserId) },
+          data: updateData,
           include: { userType: true }
         })
 
-        return res.status(200).json({ user: updatedUser })
+        return res.json({
+          success: true,
+          user: updatedUser
+        })
 
       default:
-        res.setHeader('Allow', ['GET', 'PUT'])
-        return res.status(405).json({ error: `Method ${req.method} not allowed` })
+        return res.status(405).json({ error: 'Method not allowed' })
     }
+
   } catch (error) {
-    console.error('User management API error:', error)
-    return res.status(500).json({ 
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    })
+    console.error('Error in admin/users API:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  } finally {
+    await prisma.$disconnect()
   }
 }

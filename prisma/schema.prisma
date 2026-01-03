@@ -25,6 +25,7 @@ model User {
   username      String?      @unique
   imageUrl      String?
   userTypeName  String       @default("user")
+  bannedUntil   DateTime?    // Null means not banned, date means banned until that date
   totalPlayTime Int          @default(0)
   exp           Int          @default(0)
   pp            Int          @default(0)
