@@ -1,22 +1,22 @@
 import Head from "next/head";
-import Admin from "src/game/admin";
+import AddSong from "src/game/admin/songs/AddSong";
 import AdminRoute from "src/components/AdminRoute";
 
-export const AdminHome = (): JSX.Element => (
+const AddSongPage = (): JSX.Element => (
   <>
     <div>
       <Head>
-        <title>Admin Panel - Octa Chop</title>
+        <title>Add Song - Admin Panel - Octa Chop</title>
         <link rel="icon" href="/favicon/favicon.ico" />
       </Head>
 
       <section>
         <AdminRoute>
-          <Admin />
+          <AddSong />
         </AdminRoute>
       </section>
     </div>
   </>
 );
 
-export default AdminHome;
+export default AddSongPage;

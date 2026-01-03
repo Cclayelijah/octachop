@@ -12,32 +12,43 @@ model UserType {
   userTypeName String @unique
   userTypeDesc String
   User         User[]
+  
+  @@map("user_types")
 }
 
 model User {
   userId        Int          @id @unique @default(autoincrement())
-  userTypeName  String
-  totalPlayTime Int
-  exp           Int
-  pp            Int
-  Auth          Auth[]
+  clerkId       String       @unique // Clerk user ID for sync
+  email         String       @unique
+  firstName     String?
+  lastName      String?
+  username      String?      @unique
+  imageUrl      String?
+  userTypeName  String       @default("user")
+  bannedUntil   DateTime?    // Null means not banned, date means banned until that date
+  totalPlayTime Int          @default(0)
+  exp           Int          @default(0)
+  pp            Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   PassResult    PassResult[]
   userType      UserType     @relation(fields: [userTypeName], references: [userTypeName])
 }
 
-model Auth {
-  authId   Int    @id @unique @default(autoincrement())
-  userId   Int
-  email    String
-  password String
-  phone    String
-  userName String @unique
-  user     User   @relation(fields: [userId], references: [userId])
-}
+// Remove Auth model as we'll use Clerk for authentication
+// model Auth {
+//   authId   Int    @id @unique @default(autoincrement())
+//   userId   Int
+//   email    String
+//   password String
+//   phone    String
+//   userName String @unique
+//   user     User   @relation(fields: [userId], references: [userId])
+// }
 
 model Song {
   songId        Int     @id @default(autoincrement())
-  beatmapSetId  Int     @unique
+  beatmapSetId  Int?    @unique // Made optional - can be NULL
   songUrl       String
   defaultImg    String
   title         String
@@ -45,13 +56,14 @@ model Song {
   artist        String
   artistUnicode String
   active        Boolean @default(true)
+  disabledOn    DateTime? // Null means not disabled, date means disabled timestamp
   levels        Level[] 
 }
 
 model Level {
   levelId      Int          @id @default(autoincrement())
   songId       Int
-  beatmapId    Int          @unique
+  beatmapId    Int
   difficulty   Decimal
   image        String
   approachRate Decimal
@@ -61,6 +73,8 @@ model Level {
   active     Boolean      @default(true)
   song        Song         @relation(fields: [songId], references: [songId], onDelete: Cascade)
   passResult   PassResult[]
+
+  @@unique([songId, beatmapId])
 }
 
 model PassResult {

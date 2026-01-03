@@ -28,30 +28,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // For now, let's assume we can identify the user by their Clerk user ID
     // stored in the email field or we'll need to create a mapping
     
-    // Let's try to find by Clerk user ID (assuming it's stored somewhere)
-    // For development, we'll create a simple approach:
-    
-    const auth = await prisma.auth.findFirst({
+    // Find user by Clerk ID
+    const user = await prisma.user.findFirst({
       where: {
-        // We'll need to establish this connection
-        // For now, let's find by email if available
-        email: clerkUserId // This is a placeholder - we need proper mapping
+        clerkId: clerkUserId
       },
       include: {
-        user: {
-          include: {
-            userType: true
-          }
-        }
+        userType: true
       }
     });
 
-    if (!auth) {
+    if (!user) {
       // User not found in database - they might need to be created
       return res.status(404).json({ error: 'User not found in database' });
     }
-
-    const user = auth.user;
     
     // Calculate rank based on pp (performance points)
     const usersWithHigherPp = await prisma.user.count({
