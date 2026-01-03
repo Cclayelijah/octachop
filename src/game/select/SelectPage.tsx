@@ -17,6 +17,39 @@ import {
   Level
 } from '../../shared/types';
 import GoBack from './components/GoBack';
+import {
+  Box,
+  CircularProgress,
+  Skeleton,
+  Typography,
+  Card,
+  LinearProgress,
+  Fade,
+  ThemeProvider,
+  createTheme,
+  Stack,
+  Avatar
+} from '@mui/material';
+
+// Create a dark theme with the project's purple colors
+const loadingTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#8b5a96',
+      light: '#beb7df',
+      dark: '#5a3a6b'
+    },
+    background: {
+      default: '#1a1a2e',
+      paper: 'rgba(255, 255, 255, 0.05)'
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: 'rgba(255, 255, 255, 0.7)'
+    }
+  }
+});
 
 const defaultSongImg = 'pizza.png';
 
@@ -540,16 +573,178 @@ const SelectPage: React.FC = () => {
       }}
     >
       {isLoading ? (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          color: 'white',
-          fontSize: '1.2rem'
-        }}>
-          Loading songs and player data...
-        </div>
+        <ThemeProvider theme={loadingTheme}>
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+              zIndex: 9999
+            }}
+          >
+            <Fade in={isLoading} timeout={500}>
+              <Card
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(139, 90, 150, 0.2)',
+                  borderRadius: 4,
+                  p: 5,
+                  minWidth: 400,
+                  maxWidth: 500,
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                  textAlign: 'center'
+                }}
+              >
+                <Stack spacing={4} alignItems="center">
+                  {/* Logo/Title */}
+                  <Typography 
+                    variant="h3" 
+                    sx={{
+                      fontWeight: 700,
+                      background: 'linear-gradient(45deg, #8b5a96 30%, #beb7df 90%)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 30px rgba(139, 90, 150, 0.3)',
+                      mb: 1
+                    }}
+                  >
+                    OctaChop
+                  </Typography>
+
+                  {/* Animated Progress Circle */}
+                  <Box sx={{ position: 'relative' }}>
+                    <CircularProgress
+                      size={100}
+                      thickness={4}
+                      sx={{
+                        color: '#8b5a96',
+                        filter: 'drop-shadow(0 0 15px rgba(139, 90, 150, 0.6))',
+                        animation: 'spin 2s linear infinite'
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: '2rem'
+                      }}
+                    >
+                      ♪
+                    </Box>
+                  </Box>
+
+                  {/* Loading Message */}
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      color: 'white',
+                      fontWeight: 300,
+                      letterSpacing: 1
+                    }}
+                  >
+                    Loading your musical journey
+                  </Typography>
+
+                  {/* Progress Bar */}
+                  <LinearProgress
+                    sx={{
+                      width: '100%',
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      '& .MuiLinearProgress-bar': {
+                        borderRadius: 4,
+                        background: 'linear-gradient(90deg, #8b5a96, #beb7df)',
+                        boxShadow: '0 0 20px rgba(139, 90, 150, 0.8)'
+                      }
+                    }}
+                  />
+
+                  {/* Content Preview Skeletons */}
+                  <Stack spacing={2} sx={{ width: '100%', mt: 2 }}>
+                    {/* Player Info Skeleton */}
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Skeleton 
+                        variant="circular" 
+                        width={50} 
+                        height={50}
+                        sx={{ 
+                          bgcolor: 'rgba(139, 90, 150, 0.2)',
+                          animation: 'pulse 1.5s ease-in-out infinite'
+                        }}
+                      />
+                      <Stack spacing={1} sx={{ flex: 1 }}>
+                        <Skeleton 
+                          variant="text" 
+                          width="70%" 
+                          height={24}
+                          sx={{ bgcolor: 'rgba(139, 90, 150, 0.2)' }}
+                        />
+                        <Skeleton 
+                          variant="text" 
+                          width="50%" 
+                          height={20}
+                          sx={{ bgcolor: 'rgba(139, 90, 150, 0.15)' }}
+                        />
+                      </Stack>
+                    </Stack>
+
+                    {/* Song Preview Skeleton */}
+                    <Skeleton 
+                      variant="rectangular" 
+                      width="100%" 
+                      height={120}
+                      sx={{ 
+                        borderRadius: 2,
+                        bgcolor: 'rgba(139, 90, 150, 0.1)',
+                        animation: 'pulse 1.8s ease-in-out infinite'
+                      }}
+                    />
+
+                    {/* Level Buttons Skeleton */}
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton 
+                          key={i}
+                          variant="rectangular" 
+                          width={70} 
+                          height={35}
+                          sx={{ 
+                            borderRadius: 1,
+                            bgcolor: 'rgba(139, 90, 150, 0.2)',
+                            animation: `pulse ${1.2 + i * 0.2}s ease-in-out infinite`
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                  </Stack>
+
+                  {/* Loading Steps */}
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      fontStyle: 'italic',
+                      mt: 2
+                    }}
+                  >
+                    Preparing songs, levels, and your progress...
+                  </Typography>
+                </Stack>
+              </Card>
+            </Fade>
+          </Box>
+        </ThemeProvider>
       ) : (
         <>
           {/* Player Info - Top Left Corner */}
