@@ -48,7 +48,7 @@ model User {
 
 model Song {
   songId        Int     @id @default(autoincrement())
-  beatmapSetId  Int     @unique
+  beatmapSetId  Int?    @unique // Made optional - can be NULL
   songUrl       String
   defaultImg    String
   title         String
@@ -56,13 +56,14 @@ model Song {
   artist        String
   artistUnicode String
   active        Boolean @default(true)
+  disabledOn    DateTime? // Null means not disabled, date means disabled timestamp
   levels        Level[] 
 }
 
 model Level {
   levelId      Int          @id @default(autoincrement())
   songId       Int
-  beatmapId    Int          @unique
+  beatmapId    Int
   difficulty   Decimal
   image        String
   approachRate Decimal
@@ -72,6 +73,8 @@ model Level {
   active     Boolean      @default(true)
   song        Song         @relation(fields: [songId], references: [songId], onDelete: Cascade)
   passResult   PassResult[]
+
+  @@unique([songId, beatmapId])
 }
 
 model PassResult {

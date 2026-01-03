@@ -17,17 +17,19 @@ export default function Panel({}: Props) {
     <WithUser>
       {(user) => (
         <Container>
-          <Logo>
-            <Image
-              src="/images/console.png"
-              alt="Console Logo"
-              width={46}
-              height={46}
-            />
-            <Typography variant="h5" p={0} lineHeight={1}>
-              Admin Console
-            </Typography>
-          </Logo>
+          <Link id="admin-logo" href="/admin">
+            <Logo>
+              <Image
+                src="/images/console.png"
+                alt="Console Logo"
+                width={46}
+                height={46}
+              />
+              <Typography variant="h5" p={0} lineHeight={1}>
+                Admin Console
+              </Typography>
+            </Logo>
+          </Link>
           <Nav>
             <Stack flex={1} gap={1}>
               {AdminRoute &&
@@ -65,9 +67,7 @@ export default function Panel({}: Props) {
                   Signed in as
                 </Typography>
                 <Link href="/user">
-                  <Typography>{`${user.firstName} ${
-                  user.lastName ? user.lastName : ""
-                  }`}</Typography>
+                  <Typography>{user.username || user.firstName || 'User'}</Typography>
                 </Link>
               </Stack>
             </Box>
@@ -85,6 +85,10 @@ const Container = styled.div`
   align-items: center;
   padding: 16px;
   height: 100vh;
+  #admin-logo {
+    display: flex;
+    width: 100%;
+  }
 `;
 
 const Logo = styled.div`

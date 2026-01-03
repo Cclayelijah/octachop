@@ -16,11 +16,11 @@ export const config = {
 }
 
 // /api/song
-// Required fields in body: beatmapSetId, songUrl, title, titleUnicode, artist, artistUnicode
-// Optional fields in body: defaultImg
+// Required fields in body: songUrl, title, titleUnicode, artist, artistUnicode
+// Optional fields in body: beatmapSetId, defaultImg
 
 type SongData = {
-    beatmapSetId: number,
+    beatmapSetId?: number, // Made optional
     songUrl: string,
     defaultImg?: string,
     title: string, 
@@ -94,15 +94,23 @@ async function handlePOST(
     res: NextApiResponse
 ) {
     try {
-        // Check if song with this beatmapSetId already exists
-        const existing = await prisma.song.findFirst({
-            where: { beatmapSetId: Number(songData.beatmapSetId) },
-            include: {
-                levels: {
-                    where: { active: true }
+        console.log('POST /api/song - Received data:')
+        console.log('songData:', JSON.stringify(songData, null, 2))
+        console.log('levels count:', levels.length)
+        console.log('levels sample:', levels.length > 0 ? JSON.stringify(levels[0], null, 2) : 'No levels')
+
+        // Check if song with this beatmapSetId already exists (only if beatmapSetId is provided)
+        let existing = null
+        if (songData.beatmapSetId) {
+            existing = await prisma.song.findFirst({
+                where: { beatmapSetId: Number(songData.beatmapSetId) },
+                include: {
+                    levels: {
+                        where: { active: true }
+                    }
                 }
-            }
-        })
+            })
+        }
 
         if (existing) {
             console.log(`Song ${songData.beatmapSetId} already exists, adding new levels...`)
@@ -165,29 +173,37 @@ async function handlePOST(
             artistUnicode
         } = songData
 
+        const createData: any = {
+            songUrl,
+            defaultImg: defaultImg || '',
+            title,
+            titleUnicode,
+            artist,
+            artistUnicode,
+            active: true,
+            levels: {
+                create: levels.map(level => ({
+                    beatmapId: Number(level.beatmapId),
+                    difficulty: Number(level.difficulty),
+                    image: level.image,
+                    approachRate: Number(level.approachRate),
+                    noteData: level.noteData,
+                    breakData: level.breakData,
+                    beatmapUrl: level.beatmapUrl,
+                    active: true
+                }))
+            }
+        }
+
+        // Only include beatmapSetId if it's provided
+        if (beatmapSetId) {
+            createData.beatmapSetId = Number(beatmapSetId)
+        }
+
+        console.log('Creating song with data:', JSON.stringify(createData, null, 2))
+
         const song = await prisma.song.create({
-            data: {
-                beatmapSetId: Number(beatmapSetId),
-                songUrl,
-                defaultImg: defaultImg || '',
-                title,
-                titleUnicode,
-                artist,
-                artistUnicode,
-                active: true,
-                levels: {
-                    create: levels.map(level => ({
-                        beatmapId: Number(level.beatmapId),
-                        difficulty: Number(level.difficulty),
-                        image: level.image,
-                        approachRate: Number(level.approachRate),
-                        noteData: level.noteData,
-                        breakData: level.breakData,
-                        beatmapUrl: level.beatmapUrl,
-                        active: true
-                    }))
-                }
-            },
+            data: createData,
             include: {
                 levels: true
             }

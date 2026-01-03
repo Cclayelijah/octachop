@@ -35,7 +35,7 @@ type SongData = {
   titleUnicode: string,
   artist: string,
   artistUnicode: string,
-  beatmapSetId: number
+  beatmapSetId?: number // Made optional
 }
 type LevelData = {
   beatmapId: number,
@@ -99,6 +99,13 @@ export default function AddSong({}: Props) {
   const validateFiles = (): boolean => {
     // Validate images
     for (const image of images) {
+      // Check if image has valid file data
+      if (!image.file) {
+        setSubmitStatus('error')
+        setStatusMessage(`Invalid image entry: ${image.name}. Image is missing file data.`)
+        return false
+      }
+      
       if (!image.file.type.startsWith('image/')) {
         setSubmitStatus('error')
         setStatusMessage(`Invalid image file: ${image.name}. Only image files are allowed.`)
@@ -150,13 +157,28 @@ export default function AddSong({}: Props) {
     setStatusMessage('')
     setIsSubmitting(true)
     
-    if (beatmapSetId === '') {
-      setSubmitStatus('error')
-      setStatusMessage('Beatmap Set ID is required.')
-      setIsSubmitting(false)
-      return;
+    // Helper function to create a clean folder name from song title
+    const createFolderName = (title: string) => {
+      return title.toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+        .replace(/\s+/g, '_') // Replace spaces with underscores
+        .replace(/-+/g, '_') // Replace hyphens with underscores
+        .replace(/_+/g, '_') // Replace multiple underscores with single
+        .trim()
     }
-
+    
+    // Generate upload folder ID - use beatmapSetId if available, otherwise use song title
+    const getUploadFolderId = () => {
+      if (beatmapSetId && beatmapSetId.trim() !== '') {
+        return beatmapSetId
+      }
+      const folderName = createFolderName(songTitle || 'unknown_song')
+      console.log('Using song-based folder name:', folderName, 'from title:', songTitle)
+      return folderName
+    }
+    
+    // beatmapSetId is now optional - no validation needed
+    
     if (!songFile) {
       setSubmitStatus('error')
       setStatusMessage('Audio file is required.')
@@ -210,22 +232,52 @@ export default function AddSong({}: Props) {
       
       // 1. Upload images to storage
       console.log('Uploading images...')
+      console.log('Images to upload:', images.map(img => ({ name: img.name, hasFile: !!img.file })))
       setStatusMessage(`Uploading ${images.length} image(s)...`)
       const uploadedImages: string[] = []
       
       for (const image of images) {
         try {
+          // Validate that image has required properties
+          if (!image.file) {
+            console.error(`Image ${image.name} is missing file data, skipping...`)
+            continue
+          }
+          
+          console.log('Processing image:', { 
+            name: image.name, 
+            fileType: image.file.type, 
+            fileSize: image.file.size,
+            beatmapSetId: beatmapSetId,
+            songTitle: songTitle
+          })
+          
+          // Use beatmapSetId if available, otherwise use sanitized song title
+          const uploadSongId = getUploadFolderId()
+          
           setStatusMessage(`Uploading image: ${image.name}`)
           const imageData = await fileToBase64(image.file)
+          
+          const uploadPayload = {
+            songId: uploadSongId,
+            fileType: 'image',
+            fileName: image.name,
+            fileData: imageData.split(',')[1] // Remove data:image/jpeg;base64, prefix
+          }
+          
+          console.log('Upload payload validation:', {
+            hasSongId: !!uploadPayload.songId,
+            hasFileType: !!uploadPayload.fileType,
+            hasFileName: !!uploadPayload.fileName,
+            hasFileData: !!uploadPayload.fileData,
+            songId: uploadPayload.songId,
+            fileDataLength: uploadPayload.fileData?.length || 0
+          })
+          
           const response = await fetch('/api/song/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              songId: beatmapSetId,
-              fileType: 'image',
-              fileName: image.name,
-              fileData: imageData.split(',')[1] // Remove data:image/jpeg;base64, prefix
-            })
+            body: JSON.stringify(uploadPayload)
           })
           
           const result = await response.json()
@@ -253,12 +305,15 @@ export default function AddSong({}: Props) {
       setStatusMessage(`Uploading audio file: ${songFile.name}`)
       let songUrl = ''
       try {
+        // Use beatmapSetId if available, otherwise use sanitized song title
+        const uploadSongId = getUploadFolderId()
+        
         const audioData = await fileToBase64(songFile)
         const response = await fetch('/api/song/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            songId: beatmapSetId,
+            songId: uploadSongId,
             fileType: 'audio',
             fileName: songFile.name,
             fileData: audioData.split(',')[1]
@@ -300,13 +355,17 @@ export default function AddSong({}: Props) {
         
         try {
           setStatusMessage(`Uploading beatmap: ${beatmapFile.name}`)
+          
+          // Use beatmapSetId if available, otherwise use sanitized song title
+          const uploadSongId = getUploadFolderId()
+          
           // Upload beatmap file as audio (it contains the beatmap data)
           const beatmapData = await fileToBase64(beatmapFile)
           const response = await fetch('/api/song/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              songId: beatmapSetId,
+              songId: uploadSongId,
               fileType: 'audio',
               fileName: beatmapFile.name,
               fileData: beatmapData.split(',')[1]
@@ -341,14 +400,18 @@ export default function AddSong({}: Props) {
         setStatusMessage('Saving song to database...')
         const defaultImg = uploadedImages.find(url => url.includes(defaultImage || '')) || uploadedImages[0] || ''
         
-        const songData = {
-          beatmapSetId: Number(beatmapSetId),
+        const songData: any = {
           defaultImg,
           songUrl,
           title: songTitle,
           titleUnicode: songTitleUnicode,
           artist: songArtist,
           artistUnicode: songArtistUnicode
+        }
+
+        // Only include beatmapSetId if it's provided and not empty
+        if (beatmapSetId && beatmapSetId.trim() !== '') {
+          songData.beatmapSetId = Number(beatmapSetId)
         }
 
         const createResponse = await fetch('/api/song', {

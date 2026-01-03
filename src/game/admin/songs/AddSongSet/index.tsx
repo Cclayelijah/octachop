@@ -446,7 +446,7 @@ export default function AddSongSet({}: Props) {
               flex={1}
             >
               <Button
-                href="/admin/tracks"
+                href="/admin/songs"
                 variant="contained"
                 color="secondary"
                 size="large"
