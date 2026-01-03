@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start -p 3001",
     "type-check": "tsc --pretty --noEmit",
     "format": "prettier --write .",
@@ -13,7 +13,8 @@
     "docker:up": "docker compose up",
     "docker:down": "docker compose down",
     "prisma:migrate": "npx prisma migrate dev",
-    "prisma:generate": "npx prisma generate"
+    "prisma:generate": "npx prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.16.2",
