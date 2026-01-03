@@ -24,11 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const favorites = await prisma.userFavorites.findMany({
         where: { userId: user.userId },
-        select: { songId: true }
+        select: { levelId: true }
       });
       
-      const songIds = favorites.map((f: { songId: number }) => f.songId);
-      return res.status(200).json(songIds);
+      const levelIds = favorites.map((f: { levelId: number }) => f.levelId);
+      return res.status(200).json(levelIds);
     } catch (error) {
       console.error('Error fetching favorites:', error);
       return res.status(500).json({ error: 'Failed to fetch favorites' });
@@ -36,19 +36,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
-    const { songId } = req.body;
+    const { levelId } = req.body;
     
-    if (!songId) {
-      return res.status(400).json({ error: 'Song ID is required' });
+    if (!levelId) {
+      return res.status(400).json({ error: 'Level ID is required' });
     }
 
     try {
       // Toggle favorite - add if not exists, remove if exists
       const existing = await prisma.userFavorites.findUnique({
         where: {
-          userId_songId: {
+          userId_levelId: {
             userId: user.userId,
-            songId
+            levelId
           }
         }
       });
@@ -57,9 +57,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Remove from favorites
         await prisma.userFavorites.delete({
           where: {
-            userId_songId: {
+            userId_levelId: {
               userId: user.userId,
-              songId
+              levelId
             }
           }
         });
@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await prisma.userFavorites.create({
           data: {
             userId: user.userId,
-            songId
+            levelId
           }
         });
         return res.status(200).json({ favorited: true });

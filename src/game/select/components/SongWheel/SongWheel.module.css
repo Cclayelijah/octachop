@@ -242,36 +242,54 @@
   outline-offset: 1px;
 }
 
-/* Favorite Heart Icon */
-.favoriteButton {
+/* Level Button Container for heart positioning */
+.levelButtonContainer {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* Level Favorite Heart Icon */
+.levelFavoriteButton {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: -4px;
+  right: -4px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   z-index: 10;
+  width: 20px;
+  height: 20px;
 }
 
-.favoriteButton:hover {
+.levelFavoriteButton:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.1);
 }
 
-.heartIcon {
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.5);
+.levelHeartIcon {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
   transition: all 0.2s ease;
   line-height: 1;
 }
 
-.heartIcon.favorited {
-  color: #ff4757;
-  text-shadow: 0 0 8px rgba(255, 71, 87, 0.4);
+.levelHeartIcon.favorited {
+  color: white;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+/* Remove old heart icon styles that are no longer needed */
+.favoriteButton {
+  display: none;
+}
+
+.heartIcon {
+  display: none;
 }

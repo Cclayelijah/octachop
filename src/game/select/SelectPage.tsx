@@ -82,7 +82,7 @@ const SelectPage: React.FC = () => {
   // Dynamic background colors
   const [backgroundGradient, setBackgroundGradient] = useState<string>('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)');
   
-  // User favorites
+  // User favorites (now for levels instead of songs)
   const [userFavorites, setUserFavorites] = useState<number[]>([]);
 
   // Extract dominant colors from image
@@ -372,7 +372,7 @@ const SelectPage: React.FC = () => {
         let favoriteIds: number[] = [];
         if (favoritesResponse.ok) {
           favoriteIds = await favoritesResponse.json();
-          setUserFavorites(favoriteIds);
+          setUserFavorites(favoriteIds); // These are now level IDs
         } else {
           console.error('Failed to fetch favorites');
         }
@@ -464,9 +464,14 @@ const SelectPage: React.FC = () => {
         return false;
       }
 
-      // Favorites filter
-      if (filters.showFavoritesOnly && !userFavorites.includes(song.songId)) {
-        return false;
+      // Favorites filter (now checks if any level in the song is favorited)
+      if (filters.showFavoritesOnly) {
+        const hasAnyFavoritedLevel = song.levels.some(level => 
+          userFavorites.includes(level.levelId)
+        );
+        if (!hasAnyFavoritedLevel) {
+          return false;
+        }
       }
 
       return true;
@@ -581,22 +586,22 @@ const SelectPage: React.FC = () => {
     }
   };
 
-  const handleToggleFavorite = async (songId: number) => {
+  const handleToggleFavorite = async (levelId: number) => {
     try {
       const response = await fetch('/api/user/favorites', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ songId }),
+        body: JSON.stringify({ levelId }),
       });
 
       if (response.ok) {
         const result = await response.json();
         if (result.favorited) {
-          setUserFavorites(prev => [...prev, songId]);
+          setUserFavorites(prev => [...prev, levelId]);
         } else {
-          setUserFavorites(prev => prev.filter(id => id !== songId));
+          setUserFavorites(prev => prev.filter(id => id !== levelId));
         }
       } else {
         console.error('Failed to toggle favorite');
@@ -828,7 +833,7 @@ const SelectPage: React.FC = () => {
         ) : (
           <img 
             src={`/res/songs/${defaultSongImg}`} 
-            alt={`${selectedSong!.title} background`}
+            alt={`${selectedSong?.title || 'Default'} background`}
             className={styles.backgroundImage}
           />
         )}

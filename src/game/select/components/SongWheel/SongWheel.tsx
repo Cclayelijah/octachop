@@ -7,7 +7,7 @@ interface SongWheelProps {
   selectedSongId: number | null;
   onSongSelect: (song: SongWithLevels) => void;
   onLevelSelect: (levelId: number) => void;
-  onToggleFavorite?: (songId: number) => void;
+  onToggleFavorite?: (levelId: number) => void;
   userFavorites?: number[];
   loading?: boolean;
 }
@@ -92,14 +92,13 @@ const SongWheel: React.FC<SongWheelProps> = ({
         {songs.map((song, index) => {
           const isSelected = song.songId === selectedSongId;
           const isHovered = song.songId === hoveredSongId;
-          const isFavorited = userFavorites.includes(song.songId);
           
           // Calculate difficulty range
           const difficulties = song.levels.map(level => level.difficulty);
           const minDiff = Math.min(...difficulties);
           const maxDiff = Math.max(...difficulties);
           const difficultyRange = minDiff === maxDiff ? `★${minDiff}` : `★${minDiff}-${maxDiff}`;
-          
+
           return (
             <div
               key={song.songId}
@@ -118,39 +117,44 @@ const SongWheel: React.FC<SongWheelProps> = ({
                 </div>
               </div>
               
-              {/* Favorite Heart Icon */}
-              {onToggleFavorite && (
-                <button
-                  className={styles.favoriteButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite(song.songId);
-                  }}
-                  title={isFavorited ? "Remove from favorites" : "Add to favorites"}
-                >
-                  <span className={`${styles.heartIcon} ${isFavorited ? styles.favorited : ''}`}>
-                    {isFavorited ? '♥' : '♡'}
-                  </span>
-                </button>
-              )}
-              
               {/* Level selector for selected song */}
               {isSelected && song.levels.length > 0 && (
                 <div className={styles.levelSelector}>
-                  {song.levels.map(level => (
-                    <button
-                      key={level.levelId}
-                      className={styles.levelButton}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onLevelSelect(level.levelId);
-                      }}
-                      title={`Difficulty: ★${level.difficulty}`}
-                    >
-                      <span className={styles.levelName}>Level {level.levelId}</span>
-                      <span className={styles.levelStars}>★{level.difficulty}</span>
-                    </button>
-                  ))}
+                  {song.levels.map(level => {
+                    const isFavorited = userFavorites?.includes(level.levelId) || false;
+                    const difficultyRounded = Math.round(parseFloat(level.difficulty.toString()) * 100) / 100;
+                    
+                    return (
+                      <div key={level.levelId} className={styles.levelButtonContainer}>
+                        <button
+                          className={styles.levelButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLevelSelect(level.levelId);
+                          }}
+                          title={`Difficulty: ★${difficultyRounded}`}
+                        >
+                          <span className={styles.levelStars}>★{difficultyRounded}</span>
+                        </button>
+                        
+                        {/* Heart icon for level favorites */}
+                        {onToggleFavorite && (
+                          <button
+                            className={styles.levelFavoriteButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleFavorite(level.levelId);
+                            }}
+                            title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            <span className={`${styles.levelHeartIcon} ${isFavorited ? styles.favorited : ''}`}>
+                              ♥
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

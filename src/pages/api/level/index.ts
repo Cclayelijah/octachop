@@ -62,7 +62,7 @@ async function handlePOST(
         data: {
             songId,
             beatmapId,
-            difficulty,
+            difficulty: Math.round(parseFloat(difficulty) * 100) / 100, // Round to 2 decimal places
             image,
             approachRate,
             noteData,
