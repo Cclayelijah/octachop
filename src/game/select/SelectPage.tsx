@@ -20,148 +20,78 @@ import GoBack from './components/GoBack';
 
 const defaultSongImg = 'pizza.png';
 
-// Mock data for demo purposes - replace with actual API calls
-const mockPlayer: PlayerInfoType = {
-  userId: 1,
-  userTypeName: "Player",
-  totalPlayTime: 1200,
-  exp: 5500,
-  pp: 1250,
-  username: "TestPlayer",
-  rank: 15,
-  rankTitle: "Rising Star",
-};
-
-const mockSongs: SongWithLevels[] = [
-  {
-    songId: 1,
-    beatmapSetId: 101,
-    songUrl: "bigblack.mp3",
-    defaultImg: "bigblack-bg.jpg",
-    title: "Big Black",
-    titleUnicode: "Big Black",
-    artist: "The Quick Brown Fox",
-    artistUnicode: "The Quick Brown Fox",
-    active: true,
-    levels: [
-      {
-        levelId: 1,
-        songId: 1,
-        beatmapId: 201,
-        difficulty: 3.96,
-        image: "level1.jpg",
-        approachRate: 9,
-        noteData: [],
-        breakData: [],
-        beatmapUrl: "level1.osu",
-        active: true
-      },
-      {
-        levelId: 2,
-        songId: 1,
-        beatmapId: 202,
-        difficulty: 4.99,
-        image: "level2.jpg",
-        approachRate: 9.5,
-        noteData: [],
-        breakData: [],
-        beatmapUrl: "level2.osu",
-        active: true
-      },
-      {
-        levelId: 3,
-        songId: 1,
-        beatmapId: 203,
-        difficulty: 6.06,
-        image: "level3.jpg",
-        approachRate: 10,
-        noteData: [],
-        breakData: [],
-        beatmapUrl: "level3.osu",
-        active: true
-      }
-    ],
-    maxDifficulty: 6.06,
-    minDifficulty: 3.96,
-    duration: 84,
-    isFavorite: false
-  },
-  {
-    songId: 2,
-    beatmapSetId: 102,
-    songUrl: "example2.mp3",
-    defaultImg: "default-bg2.jpg",
-    title: "Freedom Dive",
-    titleUnicode: "Freedom Dive",
-    artist: "xi",
-    artistUnicode: "xi",
-    active: true,
-    levels: [
-      {
-        levelId: 3,
-        songId: 2,
-        beatmapId: 203,
-        difficulty: 6.83,
-        image: "level3.jpg",
-        approachRate: 10,
-        noteData: [],
-        breakData: [],
-        beatmapUrl: "level3.osu",
-        active: true
-      }
-    ],
-    maxDifficulty: 6.83,
-    minDifficulty: 6.83,
-    duration: 268,
-    isFavorite: true
-  }
-];
-
-const mockScores: PassResultWithDetails[] = [
-  {
-    passResultId: 1,
-    userId: 1,
-    levelId: 1,
-    timestamp: Date.now() - 86400000, // 1 day ago
-    score: 987654321,
-    hits: 1234,
-    misses: 56,
-    healthBarData: 0,
-    replayData: 0,
-    level: {
-      levelId: 1,
-      songId: 1,
-      beatmapId: 201,
-      difficulty: 3.96,
-      image: "level1.jpg",
-      approachRate: 9,
-      noteData: [],
-      breakData: [],
-      beatmapUrl: "level1.osu",
-      active: true,
-      song: mockSongs[0]
-    },
-    user: mockPlayer,
-    accuracy: 95.65,
-    grade: 'A' as any,
-    formattedDate: 'Jan 21, 2023'
-  }
-];
-
 const SelectPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedSongId, setSelectedSongId] = useState<number | null>(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
-  const [player] = useState<PlayerInfoType>(mockPlayer);
-  const [songs] = useState<SongWithLevels[]>(mockSongs);
-  const [filteredSongs, setFilteredSongs] = useState<SongWithLevels[]>(mockSongs);
-  const [scores] = useState<PassResultWithDetails[]>(mockScores);
+  const [player, setPlayer] = useState<PlayerInfoType | null>(null);
+  const [songs, setSongs] = useState<SongWithLevels[]>([]);
+  const [filteredSongs, setFilteredSongs] = useState<SongWithLevels[]>([]);
+  const [scores, setScores] = useState<PassResultWithDetails[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     searchText: '',
     difficulty: { min: 1, max: 10 },
     duration: { min: 0, max: 600 },
     showFavoritesOnly: false,
   });
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch user info, songs, and scores in parallel
+        const [userResponse, songsResponse, scoresResponse] = await Promise.all([
+          fetch('/api/user/me'),
+          fetch('/api/song'),
+          fetch('/api/user/scores')
+        ]);
+
+        // Handle user data
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          setPlayer(userData.user);
+        } else {
+          console.error('Failed to fetch user data');
+        }
+
+        // Handle songs data
+        if (songsResponse.ok) {
+          const songsData = await songsResponse.json();
+          const processedSongs = songsData.songs.map((song: any) => ({
+            ...song,
+            maxDifficulty: Math.max(...song.levels.map((l: Level) => l.difficulty)),
+            minDifficulty: Math.min(...song.levels.map((l: Level) => l.difficulty)),
+            isFavorite: false // TODO: Implement favorites system
+          }));
+          setSongs(processedSongs);
+          setFilteredSongs(processedSongs);
+          
+          // Set first song as selected if available
+          if (processedSongs.length > 0) {
+            setSelectedSongId(processedSongs[0].songId);
+          }
+        } else {
+          console.error('Failed to fetch songs');
+        }
+
+        // Handle scores data
+        if (scoresResponse.ok) {
+          const scoresData = await scoresResponse.json();
+          setScores(scoresData.scores);
+        } else {
+          console.error('Failed to fetch scores');
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const selectedSong = songs.find(song => song.songId === selectedSongId) || null;
 
@@ -259,29 +189,42 @@ const SelectPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Player Info - Top Left Corner */}
-      <div className={styles.playerInfo}>
-        <PlayerInfoComponent 
-          player={player}
-          isLoading={isLoading}
-        />
-      </div>
+      {isLoading ? (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          color: 'white',
+          fontSize: '1.2rem'
+        }}>
+          Loading songs and player data...
+        </div>
+      ) : (
+        <>
+          {/* Player Info - Top Left Corner */}
+          <div className={styles.playerInfo}>
+            <PlayerInfoComponent 
+              player={player}
+              isLoading={false}
+            />
+          </div>
 
-      {/* Filter Bar - Top Right */}
-      <div className={styles.filterBar}>
-        <FilterPanel
-          filters={filters}
-          onFiltersChange={setFilters}
-          songCount={filteredSongs.length}
-          totalSongs={songs.length}
-        />
-      </div>
+          {/* Filter Bar - Top Right */}
+          <div className={styles.filterBar}>
+            <FilterPanel
+              filters={filters}
+              onFiltersChange={setFilters}
+              songCount={filteredSongs.length}
+              totalSongs={songs.length}
+            />
+          </div>
 
       {/* Song Artwork - Left Side Large Display */}
       <div className={styles.songArtwork}>
         {selectedSong?.defaultImg ? (
           <img 
-            src={`/res/songs/${selectedSong.songId}/${selectedSong.defaultImg}`} 
+            src={selectedSong.defaultImg} 
             alt={`${selectedSong.title} background`}
             className={styles.backgroundImage}
           />
@@ -336,6 +279,8 @@ const SelectPage: React.FC = () => {
           <GoPlay />
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

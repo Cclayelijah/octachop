@@ -20,7 +20,7 @@ export const SongDisplay: React.FC<SongDisplayProps> = ({ song, selectedLevel })
   }
 
   const backgroundImage = song.defaultImg 
-    ? `/res/songs/${song.title}/${song.defaultImg}`
+    ? song.defaultImg  // Use full Supabase URL directly
     : '/res/songs/pizza.png';
 
   return (

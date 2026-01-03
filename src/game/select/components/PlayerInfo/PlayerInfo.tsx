@@ -33,10 +33,7 @@ export const PlayerInfo: React.FC<PlayerInfoProps> = ({ player, isLoading }) => 
     <div className={styles.container}>
       <div className={styles.playerInfo}>
         <h1 className={styles.username}>{player.username}</h1>
-        <div className={styles.rankInfo}>
-          <span className={styles.rankNumber}>#{player.rank || '---'}</span>
-          <span className={styles.rankTitle}>{player.rankTitle || 'Player'}</span>
-        </div>
+        <span className={styles.rankNumber}>Rank #{player.rank || '---'}</span>
       </div>
     </div>
   );
