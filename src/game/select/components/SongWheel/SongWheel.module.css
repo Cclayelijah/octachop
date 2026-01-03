@@ -100,7 +100,7 @@
   background: rgba(139, 90, 150, 0.3);
   border: 1px solid rgba(139, 90, 150, 0.5);
   color: white;
-  padding: 8px 12px;
+  padding: 8px 28px 8px 12px; /* Add right padding for heart icon */
   border-radius: 6px;
   font-size: 0.8rem;
   cursor: pointer;
@@ -109,7 +109,7 @@
   align-items: center;
   gap: 6px;
   min-width: 70px;
-  justify-content: space-between;
+  justify-content: flex-start; /* Change to flex-start since heart is positioned absolutely */
 }
 
 .levelButton:hover {
@@ -119,6 +119,17 @@
 
 .levelButton:active {
   transform: scale(0.98);
+}
+
+.levelButton.activeLevel {
+  background: white;
+  color: #333;
+  border-color: white;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.2);
+}
+
+.levelButton.activeLevel .levelStars {
+  color: #b8860b; /* Darker gold for better contrast on white background */
 }
 
 .levelName {
@@ -252,29 +263,34 @@
 /* Level Favorite Heart Icon */
 .levelFavoriteButton {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 0;
+  right: 0;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px;
-  border-radius: 50%;
+  padding: 0;
+  border-radius: 0 6px 6px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   z-index: 10;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 100%;
+  min-height: 34px;
 }
 
 .levelFavoriteButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
+  background: none; /* Remove background hover effect */
+}
+
+.levelFavoriteButton:hover .levelHeartIcon {
+  transform: scale(1.2); /* Scale up the heart icon only */
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.8); /* Add glowing effect to the icon */
 }
 
 .levelHeartIcon {
-  font-size: 12px;
+  font-size: 16px;
   color: rgba(255, 255, 255, 0.3);
   transition: all 0.2s ease;
   line-height: 1;
@@ -282,7 +298,19 @@
 
 .levelHeartIcon.favorited {
   color: white;
-  text-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+/* Black heart icon only for active level */
+.levelHeartIcon.favorited.activeLevel {
+  color: black;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Lighter grey heart icon for unfavorited hearts on active level - halfway between medium grey and original light */
+.levelHeartIcon.activeLevel:not(.favorited) {
+  color: #999; /* Lighter grey - halfway between #666 and original rgba(255,255,255,0.3) */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Very subtle shadow for depth */
 }
 
 /* Remove old heart icon styles that are no longer needed */

@@ -79,6 +79,10 @@ const SelectPage: React.FC = () => {
   const [audioLoadingQueue, setAudioLoadingQueue] = useState<Set<number>>(new Set());
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   
+  // Image preloading state
+  const [loadedImages, setLoadedImages] = useState<Map<number, HTMLImageElement>>(new Map());
+  const [imageLoadingQueue, setImageLoadingQueue] = useState<Set<number>>(new Set());
+  
   // Dynamic background colors
   const [backgroundGradient, setBackgroundGradient] = useState<string>('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)');
   
@@ -282,6 +286,66 @@ const SelectPage: React.FC = () => {
     }
   };
 
+  // Load image in background for performance
+  const loadImageInBackground = (song: SongWithLevels) => {
+    if (loadedImages.has(song.songId) || imageLoadingQueue.has(song.songId)) {
+      return;
+    }
+
+    setImageLoadingQueue(prev => new Set([...prev, song.songId]));
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      setLoadedImages(prev => new Map([...prev, [song.songId, img]]));
+      console.log(`✅ Image preloaded for: ${song.title}`);
+      
+      // Remove from loading queue
+      setImageLoadingQueue(prev => {
+        const newQueue = new Set(prev);
+        newQueue.delete(song.songId);
+        return newQueue;
+      });
+    };
+
+    img.onerror = (error) => {
+      console.error(`❌ Failed to preload image for ${song.title}:`, error);
+      
+      // Remove from loading queue even on error
+      setImageLoadingQueue(prev => {
+        const newQueue = new Set(prev);
+        newQueue.delete(song.songId);
+        return newQueue;
+      });
+    };
+
+    // Load the default image (song background)
+    if (song.defaultImg) {
+      img.src = song.defaultImg;
+    } else {
+      // Fallback to song directory image
+      img.src = `/res/songs/${song.songId}/default.jpg`;
+    }
+  };
+
+  // Load images for current song and next 2-3 songs
+  const loadSurroundingImages = (currentIndex: number) => {
+    if (!filteredSongs.length) return;
+
+    // Load current song and next 2-3 songs
+    const songsToLoad = [];
+    for (let i = 0; i < 4; i++) { // Current + next 3
+      const index = (currentIndex + i) % filteredSongs.length;
+      songsToLoad.push(filteredSongs[index]);
+    }
+
+    // Load images in background
+    songsToLoad.forEach(song => {
+      loadImageInBackground(song);
+    });
+  };
+
   // Load audio for current song and next 2-3 songs
   const loadSurroundingAudio = (currentIndex: number) => {
     if (!filteredSongs.length) return;
@@ -397,6 +461,9 @@ const SelectPage: React.FC = () => {
             if (firstSong.levels && firstSong.levels.length > 0) {
               setSelectedLevel(firstSong.levels[0]);
             }
+            
+            // Start preloading images for first few songs
+            loadSurroundingImages(0);
           }
         } else {
           console.error('Failed to fetch songs');
@@ -524,6 +591,7 @@ const SelectPage: React.FC = () => {
       const currentIndex = filteredSongs.findIndex(song => song.songId === selectedSongId);
       if (currentIndex >= 0) {
         loadSurroundingAudio(currentIndex);
+        loadSurroundingImages(currentIndex);
       }
     }
   }, [filteredSongs, selectedSongId]);
@@ -533,8 +601,9 @@ const SelectPage: React.FC = () => {
     if (selectedSongId && filteredSongs.length > 0) {
       const currentIndex = filteredSongs.findIndex(song => song.songId === selectedSongId);
       if (currentIndex >= 0) {
-        // Load audio for current and next songs
+        // Load audio and images for current and next songs
         loadSurroundingAudio(currentIndex);
+        loadSurroundingImages(currentIndex);
         
         // Auto-play current song preview after a short delay
         setTimeout(() => {
@@ -547,7 +616,7 @@ const SelectPage: React.FC = () => {
     }
   }, [selectedSongId, loadedAudio]);
 
-  // Cleanup audio on unmount
+  // Cleanup audio and images on unmount
   useEffect(() => {
     return () => {
       // Stop current audio
@@ -561,6 +630,12 @@ const SelectPage: React.FC = () => {
         audio.src = '';
       });
       setLoadedAudio(new Map());
+      
+      // Cleanup all loaded images
+      loadedImages.forEach(img => {
+        img.src = '';
+      });
+      setLoadedImages(new Map());
     };
   }, []);
 
@@ -826,7 +901,10 @@ const SelectPage: React.FC = () => {
       >
         {selectedSong?.defaultImg ? (
           <img 
-            src={selectedSong.defaultImg} 
+            src={loadedImages.has(selectedSong.songId) 
+              ? loadedImages.get(selectedSong.songId)!.src 
+              : selectedSong.defaultImg
+            } 
             alt={`${selectedSong.title} background`}
             className={styles.backgroundImage}
           />
@@ -876,6 +954,7 @@ const SelectPage: React.FC = () => {
         <SongWheel
           songs={filteredSongs}
           selectedSongId={selectedSongId}
+          selectedLevelId={selectedLevel?.levelId || null}
           onSongSelect={handleSongSelect}
           onLevelSelect={handleLevelSelect}
           onToggleFavorite={handleToggleFavorite}

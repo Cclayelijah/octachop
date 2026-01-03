@@ -5,6 +5,7 @@ import styles from './SongWheel.module.css';
 interface SongWheelProps {
   songs: SongWithLevels[];
   selectedSongId: number | null;
+  selectedLevelId?: number | null;
   onSongSelect: (song: SongWithLevels) => void;
   onLevelSelect: (levelId: number) => void;
   onToggleFavorite?: (levelId: number) => void;
@@ -15,6 +16,7 @@ interface SongWheelProps {
 const SongWheel: React.FC<SongWheelProps> = ({
   songs,
   selectedSongId,
+  selectedLevelId,
   onSongSelect,
   onLevelSelect,
   onToggleFavorite,
@@ -122,12 +124,13 @@ const SongWheel: React.FC<SongWheelProps> = ({
                 <div className={styles.levelSelector}>
                   {song.levels.map(level => {
                     const isFavorited = userFavorites?.includes(level.levelId) || false;
+                    const isActiveLevel = selectedLevelId === level.levelId;
                     const difficultyRounded = Math.round(parseFloat(level.difficulty.toString()) * 100) / 100;
                     
                     return (
                       <div key={level.levelId} className={styles.levelButtonContainer}>
                         <button
-                          className={styles.levelButton}
+                          className={`${styles.levelButton} ${isActiveLevel ? styles.activeLevel : ''}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             onLevelSelect(level.levelId);
@@ -147,7 +150,7 @@ const SongWheel: React.FC<SongWheelProps> = ({
                             }}
                             title={isFavorited ? "Remove from favorites" : "Add to favorites"}
                           >
-                            <span className={`${styles.levelHeartIcon} ${isFavorited ? styles.favorited : ''}`}>
+                            <span className={`${styles.levelHeartIcon} ${isFavorited ? styles.favorited : ''} ${isActiveLevel ? styles.activeLevel : ''}`}>
                               ♥
                             </span>
                           </button>

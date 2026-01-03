@@ -63,7 +63,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             fontSize: '14px'
           }}
         >
-          {filters.showFavoritesOnly ? '♥' : '♡'} Favorites
+          <span style={{ 
+            color: filters.showFavoritesOnly ? 'white' : 'rgba(255, 255, 255, 0.3)',
+            textShadow: filters.showFavoritesOnly ? '0 0 8px rgba(255, 255, 255, 0.6)' : 'none'
+          }}>
+            ♥
+          </span> Favorites
         </button>
       </div>
       <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px' }}>
