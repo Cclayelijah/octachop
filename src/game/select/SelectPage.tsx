@@ -16,6 +16,7 @@ import {
   PassResultWithDetails,
   Level
 } from '../../shared/types';
+import GoBack from './components/GoBack';
 
 const defaultSongImg = 'pizza.png';
 
@@ -325,19 +326,15 @@ const SelectPage: React.FC = () => {
         />
       </div>
 
-      {/* Back Arrow - Bottom Left Corner */}
-      <div className={styles.backArrow}>
-        <button
-          onClick={() => window.history.back()}
-          title="Go back"
-        >
-          ‹‹‹
-        </button>
-      </div>
-
-      {/* Play Button - Bottom Right Corner */}
-      <div className={styles.playButton}>
-        <GoPlay disabled={!selectedSong || !selectedLevel} />
+      {/* Bottom Tray */}
+      <div className={styles.bottomTray}>
+        <div className={styles.backButton}>
+          <GoBack />
+        </div>
+        <div className={styles.sketch}></div>
+        <div className={styles.playButton}>
+          <GoPlay />
+        </div>
       </div>
     </div>
   );
