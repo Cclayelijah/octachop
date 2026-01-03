@@ -40,6 +40,132 @@ const SelectPage: React.FC = () => {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [audioLoadingQueue, setAudioLoadingQueue] = useState<Set<number>>(new Set());
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  
+  // Dynamic background colors
+  const [backgroundGradient, setBackgroundGradient] = useState<string>('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)');
+
+  // Extract dominant colors from image
+  const extractColorsFromImage = (imageUrl: string): Promise<string[]> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          resolve(['#1a1a2e', '#16213e', '#0f3460']); // fallback
+          return;
+        }
+
+        // Scale down image for faster processing
+        const scale = Math.min(100 / img.width, 100 / img.height);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const colors = extractDominantColors(imageData.data, 3);
+          resolve(colors);
+        } catch (error) {
+          console.warn('Could not extract colors from image:', error);
+          resolve(['#1a1a2e', '#16213e', '#0f3460']); // fallback
+        }
+      };
+
+      img.onerror = () => {
+        resolve(['#1a1a2e', '#16213e', '#0f3460']); // fallback
+      };
+
+      img.src = imageUrl;
+    });
+  };
+
+  // Color clustering algorithm to find dominant colors
+  const extractDominantColors = (imageData: Uint8ClampedArray, numColors: number): string[] => {
+    const pixels: number[][] = [];
+    
+    // Sample every 4th pixel for performance
+    for (let i = 0; i < imageData.length; i += 16) {
+      const r = imageData[i];
+      const g = imageData[i + 1];
+      const b = imageData[i + 2];
+      const alpha = imageData[i + 3];
+      
+      // Skip transparent pixels and very bright/dark pixels for better results
+      if (alpha > 128 && !(r > 240 && g > 240 && b > 240) && !(r < 15 && g < 15 && b < 15)) {
+        pixels.push([r, g, b]);
+      }
+    }
+
+    if (pixels.length === 0) {
+      return ['#1a1a2e', '#16213e', '#0f3460'];
+    }
+
+    // Simple k-means clustering to find dominant colors
+    const clusters = kMeansColors(pixels, numColors);
+    
+    // Convert to hex and darken for background use
+    return clusters.map(color => {
+      const [r, g, b] = color.map(c => Math.max(20, Math.floor(c * 0.4))); // Darken for background
+      return `rgb(${r}, ${g}, ${b})`;
+    });
+  };
+
+  // Simple k-means clustering for color analysis
+  const kMeansColors = (pixels: number[][], k: number, maxIterations: number = 10): number[][] => {
+    if (pixels.length === 0) return [];
+    
+    // Initialize centroids randomly
+    let centroids: number[][] = [];
+    for (let i = 0; i < k; i++) {
+      const randomPixel = pixels[Math.floor(Math.random() * pixels.length)];
+      centroids.push([...randomPixel]);
+    }
+
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
+      const clusters: number[][][] = Array(k).fill(null).map(() => []);
+      
+      // Assign pixels to nearest centroid
+      pixels.forEach(pixel => {
+        let minDistance = Infinity;
+        let closestCentroid = 0;
+        
+        centroids.forEach((centroid, index) => {
+          const distance = Math.sqrt(
+            Math.pow(pixel[0] - centroid[0], 2) +
+            Math.pow(pixel[1] - centroid[1], 2) +
+            Math.pow(pixel[2] - centroid[2], 2)
+          );
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestCentroid = index;
+          }
+        });
+        
+        clusters[closestCentroid].push(pixel);
+      });
+
+      // Update centroids
+      const newCentroids = clusters.map(cluster => {
+        if (cluster.length === 0) return centroids[0]; // fallback
+        
+        const avgR = cluster.reduce((sum, pixel) => sum + pixel[0], 0) / cluster.length;
+        const avgG = cluster.reduce((sum, pixel) => sum + pixel[1], 0) / cluster.length;
+        const avgB = cluster.reduce((sum, pixel) => sum + pixel[2], 0) / cluster.length;
+        
+        return [Math.round(avgR), Math.round(avgG), Math.round(avgB)];
+      });
+
+      centroids = newCentroids;
+    }
+
+    return centroids;
+  };
 
   // Generate audio URL based on the same pattern as images
   const generateAudioUrl = (song: SongWithLevels): string => {
@@ -195,7 +321,13 @@ const SelectPage: React.FC = () => {
           
           // Set first song as selected if available
           if (processedSongs.length > 0) {
-            setSelectedSongId(processedSongs[0].songId);
+            const firstSong = processedSongs[0];
+            setSelectedSongId(firstSong.songId);
+            
+            // Auto-select first level of the first song
+            if (firstSong.levels && firstSong.levels.length > 0) {
+              setSelectedLevel(firstSong.levels[0]);
+            }
           }
         } else {
           console.error('Failed to fetch songs');
@@ -220,6 +352,24 @@ const SelectPage: React.FC = () => {
   }, []);
 
   const selectedSong = songs.find(song => song.songId === selectedSongId) || null;
+
+  // Update background when selected song changes
+  useEffect(() => {
+    if (selectedSong?.defaultImg) {
+      extractColorsFromImage(selectedSong.defaultImg)
+        .then(colors => {
+          const gradient = `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 50%, ${colors[2]} 100%)`;
+          setBackgroundGradient(gradient);
+        })
+        .catch(() => {
+          // Fallback to original gradient
+          setBackgroundGradient('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)');
+        });
+    } else {
+      // No image, use default gradient
+      setBackgroundGradient('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)');
+    }
+  }, [selectedSong?.defaultImg]);
 
   // Filter songs based on current filters
   useEffect(() => {
@@ -363,7 +513,13 @@ const SelectPage: React.FC = () => {
   };
 
   return (
-    <div className={styles.container}>
+    <div 
+      className={styles.container}
+      style={{
+        background: backgroundGradient,
+        transition: 'background 1s ease-in-out'
+      }}
+    >
       {isLoading ? (
         <div style={{ 
           display: 'flex', 
