@@ -1,18 +1,17 @@
 import React from 'react';
 import { FilterState } from '../../../shared/types';
+import styles from './FilterPanel.module.css';
 
 interface FilterPanelProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   songCount: number;
-  totalSongs: number;
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
   filters,
   onFiltersChange,
-  songCount,
-  totalSongs
+  songCount
 }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({
@@ -30,12 +29,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   return (
     <div style={{ 
-      background: 'rgba(139, 90, 150, 0.9)', 
-      padding: '16px', 
-      borderRadius: '12px', 
-      marginBottom: '16px' 
+      width: '100%',
+      display: 'flex', 
+      gap: '16px', 
+      alignItems: 'center', 
+      justifyContent: 'space-between' 
     }}>
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1 }}>
         <input
           type="text"
           placeholder="Search songs or artists..."
@@ -43,24 +43,32 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           onChange={handleSearchChange}
           style={{
             flex: 1,
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid rgba(255,255,255,0.3)',
-            background: 'rgba(255,255,255,0.1)',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            border: '2px solid rgba(255,255,255,0.3)',
+            background: 'rgba(0, 0, 0, 0.3)',
             color: 'white',
-            fontSize: '14px'
+            fontSize: '16px',
+            fontWeight: '500',
+            outline: 'none',
+            transition: 'all 0.2s ease',
+            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
           }}
+          className={styles.searchInput}
         />
         <button
           onClick={toggleFavoritesOnly}
           style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid rgba(255,255,255,0.3)',
-            background: filters.showFavoritesOnly ? 'rgba(255,255,255,0.2)' : 'transparent',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: '2px solid rgba(255,255,255,0.3)',
+            background: filters.showFavoritesOnly ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
             color: 'white',
             cursor: 'pointer',
-            fontSize: '14px'
+            fontSize: '15px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
           }}
         >
           <span style={{ 
@@ -71,8 +79,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </span> Favorites
         </button>
       </div>
-      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px' }}>
-        Showing {songCount} of {totalSongs} songs
+      <div style={{ 
+        color: 'rgba(255,255,255,0.9)', 
+        fontSize: '16px',
+        fontWeight: '600',
+        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+        minWidth: 'fit-content'
+      }}>
+        {songCount} Songs
       </div>
     </div>
   );

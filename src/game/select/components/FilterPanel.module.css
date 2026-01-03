@@ -1,0 +1,26 @@
+.searchInput {
+  color: white !important;
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+  opacity: 1;
+}
+
+.searchInput::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.searchInput::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+  opacity: 1;
+}
+
+.searchInput:-ms-input-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.searchInput:-moz-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+  opacity: 1;
+}

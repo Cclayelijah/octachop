@@ -883,7 +883,6 @@ const SelectPage: React.FC = () => {
               filters={filters}
               onFiltersChange={setFilters}
               songCount={filteredSongs.length}
-              totalSongs={songs.length}
             />
           </div>
 
