@@ -34,6 +34,132 @@ const SelectPage: React.FC = () => {
     duration: { min: 0, max: 600 },
     showFavoritesOnly: false,
   });
+  
+  // Audio loading state
+  const [loadedAudio, setLoadedAudio] = useState<Map<number, HTMLAudioElement>>(new Map());
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [audioLoadingQueue, setAudioLoadingQueue] = useState<Set<number>>(new Set());
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+
+  // Generate audio URL based on the same pattern as images
+  const generateAudioUrl = (song: SongWithLevels): string => {
+    if (song.songUrl) {
+      // If songUrl is already a full URL, use it directly
+      if (song.songUrl.startsWith('http')) {
+        return song.songUrl;
+      }
+      // Otherwise construct Supabase URL using the same pattern as images
+      // Use beatmapSetId if available, otherwise use sanitized song title
+      const folderId = song.beatmapSetId || sanitizeSongTitle(song.title);
+      return `https://pxoisppgfuifvywwcvwt.supabase.co/storage/v1/object/public/songs/${folderId}/${song.songUrl}`;
+    }
+    return '';
+  };
+
+  // Helper function to sanitize song title for folder names (same as backend)
+  const sanitizeSongTitle = (title: string): string => {
+    return title
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '')
+      .toLowerCase();
+  };
+
+  // Background audio loading function
+  const loadAudioInBackground = async (song: SongWithLevels): Promise<void> => {
+    if (loadedAudio.has(song.songId) || audioLoadingQueue.has(song.songId)) {
+      return; // Already loaded or loading
+    }
+
+    setAudioLoadingQueue(prev => new Set([...prev, song.songId]));
+
+    try {
+      const audioUrl = generateAudioUrl(song);
+      if (!audioUrl) {
+        console.warn(`No audio URL for song: ${song.title}`);
+        return;
+      }
+
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.volume = 0.7; // Set default volume
+      
+      await new Promise((resolve, reject) => {
+        const onCanPlay = () => {
+          audio.removeEventListener('canplaythrough', onCanPlay);
+          audio.removeEventListener('error', onError);
+          resolve(void 0);
+        };
+        
+        const onError = () => {
+          audio.removeEventListener('canplaythrough', onCanPlay);
+          audio.removeEventListener('error', onError);
+          reject(new Error(`Failed to load audio for ${song.title}`));
+        };
+
+        audio.addEventListener('canplaythrough', onCanPlay);
+        audio.addEventListener('error', onError);
+        audio.src = audioUrl;
+      });
+
+      setLoadedAudio(prev => new Map([...prev, [song.songId, audio]]));
+      console.log(`✅ Audio loaded for: ${song.title}`);
+    } catch (error) {
+      console.error(`❌ Failed to load audio for ${song.title}:`, error);
+    } finally {
+      setAudioLoadingQueue(prev => {
+        const newQueue = new Set(prev);
+        newQueue.delete(song.songId);
+        return newQueue;
+      });
+    }
+  };
+
+  // Load audio for current song and next 2-3 songs
+  const loadSurroundingAudio = (currentIndex: number) => {
+    if (!filteredSongs.length) return;
+
+    // Load current song and next 2-3 songs
+    const songsToLoad = [];
+    for (let i = 0; i < 4; i++) { // Current + next 3
+      const index = (currentIndex + i) % filteredSongs.length;
+      songsToLoad.push(filteredSongs[index]);
+    }
+
+    // Load audio in background
+    songsToLoad.forEach(song => {
+      loadAudioInBackground(song);
+    });
+  };
+
+  // Play/pause current audio
+  const playCurrentAudio = () => {
+    if (!selectedSongId) return;
+    
+    const audio = loadedAudio.get(selectedSongId);
+    if (audio) {
+      if (currentAudio && currentAudio !== audio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      
+      audio.currentTime = 0;
+      audio.play();
+      setCurrentAudio(audio);
+      setIsAudioPlaying(true);
+      
+      // Add event listeners
+      audio.addEventListener('ended', () => setIsAudioPlaying(false));
+      audio.addEventListener('pause', () => setIsAudioPlaying(false));
+    }
+  };
+
+  const pauseCurrentAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      setIsAudioPlaying(false);
+    }
+  };
 
   // Fetch data on component mount
   useEffect(() => {
@@ -168,7 +294,56 @@ const SelectPage: React.FC = () => {
     };
   }, [selectedSong, selectedLevel]);
 
+  // Load audio when filtered songs change
+  useEffect(() => {
+    if (filteredSongs.length > 0 && selectedSongId) {
+      const currentIndex = filteredSongs.findIndex(song => song.songId === selectedSongId);
+      if (currentIndex >= 0) {
+        loadSurroundingAudio(currentIndex);
+      }
+    }
+  }, [filteredSongs, selectedSongId]);
+
+  // Load audio when song selection changes
+  useEffect(() => {
+    if (selectedSongId && filteredSongs.length > 0) {
+      const currentIndex = filteredSongs.findIndex(song => song.songId === selectedSongId);
+      if (currentIndex >= 0) {
+        // Load audio for current and next songs
+        loadSurroundingAudio(currentIndex);
+        
+        // Auto-play current song preview after a short delay
+        setTimeout(() => {
+          const audio = loadedAudio.get(selectedSongId);
+          if (audio) {
+            playCurrentAudio();
+          }
+        }, 500);
+      }
+    }
+  }, [selectedSongId, loadedAudio]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      // Stop current audio
+      if (currentAudio) {
+        currentAudio.pause();
+      }
+      
+      // Cleanup all loaded audio
+      loadedAudio.forEach(audio => {
+        audio.pause();
+        audio.src = '';
+      });
+      setLoadedAudio(new Map());
+    };
+  }, []);
+
   const handleSongSelect = (song: SongWithLevels) => {
+    // Pause current audio before switching
+    pauseCurrentAudio();
+    
     setSelectedSongId(song.songId);
     // Auto-select first level
     if (song.levels.length > 0) {
@@ -221,7 +396,17 @@ const SelectPage: React.FC = () => {
           </div>
 
       {/* Song Artwork - Left Side Large Display */}
-      <div className={styles.songArtwork}>
+      <div 
+        className={styles.songArtwork} 
+        onClick={() => {
+          if (currentAudio && !currentAudio.paused) {
+            pauseCurrentAudio();
+          } else {
+            playCurrentAudio();
+          }
+        }}
+        style={{ cursor: 'pointer' }}
+      >
         {selectedSong?.defaultImg ? (
           <img 
             src={selectedSong.defaultImg} 
@@ -243,6 +428,17 @@ const SelectPage: React.FC = () => {
               <div className={styles.selectedLevelInfo}>
                 <span>★{selectedLevel.difficulty}</span>
                 <span>AR {selectedLevel.approachRate}</span>
+                {/* Audio loading indicator */}
+                {selectedSongId && audioLoadingQueue.has(selectedSongId) && (
+                  <span style={{ color: '#8B7FD6', fontSize: '0.8rem', marginLeft: '8px' }}>
+                    🎵 Loading...
+                  </span>
+                )}
+                {selectedSongId && loadedAudio.has(selectedSongId) && !audioLoadingQueue.has(selectedSongId) && (
+                  <span style={{ color: '#4CAF50', fontSize: '0.8rem', marginLeft: '8px' }}>
+                    {isAudioPlaying ? '🎵 Playing' : '🎵 Click to play'}
+                  </span>
+                )}
               </div>
             )}
           </div>
