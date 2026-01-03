@@ -8,6 +8,8 @@ export default authMiddleware({
     '/select',
     '/sign-in',
     '/sign-up',
+    '/api/song',
+    '/api/song/(.*)',
     '/api/songs',
     '/api/songs/(.*)',
     '/api/levels',

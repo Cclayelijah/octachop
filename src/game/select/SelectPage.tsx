@@ -1,6 +1,11 @@
 /**
  * Main Song Selection Page
- * Beautiful, responsive layout matching the design mockup
+ * Beautiful, responsive layo  const [filters, setFilters] = useState<FilterState>({
+    searchText: '',
+    difficulty: { min: 0, max: 10000 }, // Expanded range to include all difficulties
+    duration: { min: 0, max: 600 },
+    showFavoritesOnly: false
+  });ching the design mockup
  */
 
 import React, { useState, useEffect } from 'react';
@@ -63,7 +68,7 @@ const SelectPage: React.FC = () => {
   const [scores, setScores] = useState<PassResultWithDetails[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     searchText: '',
-    difficulty: { min: 1, max: 10 },
+    difficulty: { min: 0, max: 10000 }, // Expanded range to include all difficulties
     duration: { min: 0, max: 600 },
     showFavoritesOnly: false,
   });
