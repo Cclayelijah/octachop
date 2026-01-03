@@ -264,19 +264,31 @@ const SelectPage: React.FC = () => {
     
     const audio = loadedAudio.get(selectedSongId);
     if (audio) {
-      if (currentAudio && currentAudio !== audio) {
+      // Stop and reset any currently playing audio
+      if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
       }
       
+      // If the same audio is already current and playing, don't restart it
+      if (currentAudio === audio && !audio.paused) {
+        return;
+      }
+      
+      // Reset audio and play
       audio.currentTime = 0;
-      audio.play();
+      
+      // Remove any existing event listeners first
+      const oldOnEnded = audio.onended;
+      const oldOnPause = audio.onpause;
+      
+      audio.play().catch(console.error);
       setCurrentAudio(audio);
       setIsAudioPlaying(true);
       
-      // Add event listeners
-      audio.addEventListener('ended', () => setIsAudioPlaying(false));
-      audio.addEventListener('pause', () => setIsAudioPlaying(false));
+      // Set event handlers (this overwrites any previous ones)
+      audio.onended = () => setIsAudioPlaying(false);
+      audio.onpause = () => setIsAudioPlaying(false);
     }
   };
 
@@ -285,6 +297,13 @@ const SelectPage: React.FC = () => {
       currentAudio.pause();
       setIsAudioPlaying(false);
     }
+    
+    // Also pause any other potentially playing audio as a safety measure
+    loadedAudio.forEach((audio, songId) => {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    });
   };
 
   // Fetch data on component mount
@@ -465,10 +484,10 @@ const SelectPage: React.FC = () => {
         // Auto-play current song preview after a short delay
         setTimeout(() => {
           const audio = loadedAudio.get(selectedSongId);
-          if (audio) {
+          if (audio && !isAudioPlaying && (!currentAudio || currentAudio.paused)) {
             playCurrentAudio();
           }
-        }, 500);
+        }, 300);
       }
     }
   }, [selectedSongId, loadedAudio]);
