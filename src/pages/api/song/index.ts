@@ -134,7 +134,7 @@ async function handlePOST(
                 data: newLevels.map(level => ({
                     songId: existing.songId,
                     beatmapId: Number(level.beatmapId),
-                    difficulty: Number(level.difficulty),
+                    difficulty: Math.round(Number(level.difficulty) * 100) / 100, // Round to 2 decimal places
                     image: level.image,
                     approachRate: Number(level.approachRate),
                     noteData: level.noteData,
@@ -184,7 +184,7 @@ async function handlePOST(
             levels: {
                 create: levels.map(level => ({
                     beatmapId: Number(level.beatmapId),
-                    difficulty: Number(level.difficulty),
+                    difficulty: Math.round(Number(level.difficulty) * 100) / 100, // Round to 2 decimal places
                     image: level.image,
                     approachRate: Number(level.approachRate),
                     noteData: level.noteData,

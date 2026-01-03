@@ -6,12 +6,15 @@
   display: flex;
   align-items: center;
   padding: var(--spacing-md);
+  flex:1;
 }
 
 .playerInfo {
   display: flex;
-  flex-direction: column;
+  flex:1;
   gap: var(--spacing-xs);
+  justify-content: space-between;
+  align-items: center;
 }
 
 .username {
@@ -22,24 +25,11 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.rankInfo {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
 .rankNumber {
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-accent-gold);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.rankTitle {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 /* Loading skeleton */

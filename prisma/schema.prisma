@@ -32,6 +32,7 @@ model User {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   PassResult    PassResult[]
+  favorites     UserFavorites[]
   userType      UserType     @relation(fields: [userTypeName], references: [userTypeName])
 }
 
@@ -57,22 +58,23 @@ model Song {
   artistUnicode String
   active        Boolean @default(true)
   disabledOn    DateTime? // Null means not disabled, date means disabled timestamp
-  levels        Level[] 
+  levels        Level[]
 }
 
 model Level {
   levelId      Int          @id @default(autoincrement())
   songId       Int
   beatmapId    Int
-  difficulty   Decimal
+  difficulty   Decimal      @db.Decimal(6,2) // Allow up to 9999.99 difficulty with 2 decimal places
   image        String
   approachRate Decimal
   noteData     Json[]
   breakData    Json[]
   beatmapUrl   String
-  active     Boolean      @default(true)
-  song        Song         @relation(fields: [songId], references: [songId], onDelete: Cascade)
+  active       Boolean      @default(true)
+  song         Song         @relation(fields: [songId], references: [songId], onDelete: Cascade)
   passResult   PassResult[]
+  favoritedBy  UserFavorites[]
 
   @@unique([songId, beatmapId])
 }
@@ -89,4 +91,15 @@ model PassResult {
   replayData    Int
   level         Level @relation(fields: [levelId], references: [levelId])
   user          User  @relation(fields: [userId], references: [userId])
+}
+
+model UserFavorites {
+  userId   Int
+  levelId  Int
+  favoritedAt DateTime @default(now())
+  user     User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  level    Level @relation(fields: [levelId], references: [levelId], onDelete: Cascade)
+
+  @@id([userId, levelId])
+  @@map("user_favorites")
 }

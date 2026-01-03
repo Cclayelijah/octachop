@@ -5,11 +5,12 @@
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
   grid-template-areas:
     "playerInfo filterBar"
     "songArtwork songWheel"
-    "scoresList songWheel";
+    "scoresList songWheel"
+    "bottomTray bottomTray";
   height: 100vh;
   width: 100vw;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -17,33 +18,24 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   overflow: hidden;
   gap: 16px;
-  padding: 20px;
+  padding: 0 16px;
   box-sizing: border-box;
 }
 
 /* Player Info - Top Left Corner */
 .playerInfo {
-  grid-area: playerInfo;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 16px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   display: flex;
-  align-items: center;
-  max-height: 80px;
+  align-items: flex-end;
 }
 
 /* Filter Bar - Top Right */
 .filterBar {
-  grid-area: filterBar;
   background: rgba(139, 90, 150, 0.9);
   border: 1px solid rgba(139, 90, 150, 0.3);
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
   padding: 16px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(139, 90, 150, 0.3);
+  box-shadow: 0 12px 48px rgba(139, 90, 150, 0.4), 0 8px 32px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   max-height: 80px;
@@ -62,6 +54,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 16 / 9; /* Maintain 16:9 aspect ratio */
 }
 
 .songArtwork img {
@@ -123,7 +116,8 @@
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
-  max-height: 200px;
+  min-height: 0; /* Allow it to shrink */
+  height: 100%; /* Fill available space */
 }
 
 /* Song Wheel - Right Side */
@@ -201,53 +195,27 @@
   min-width: 40px;
 }
 
-/* Back Arrow - Bottom Left */
-.backArrow {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.bottomTray {
+  grid-area: bottomTray; /* Assign to the bottomTray grid area */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-}
-
-.backArrow button {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
   width: 100%;
-  height: 100%;
-  transition: all 0.2s ease;
-  font-weight: 600;
 }
 
-.backArrow:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateX(-2px);
+.sketch {
+  flex: 1;
 }
 
-.backArrow:hover button {
-  color: white;
+/* Back Button - Bottom Left */
+.backButton {
+  transition: all 0.3s ease;
+}
+
+.backButton:hover {
+  transform: translateX(5px);
 }
 
 /* Play Button - Bottom Right */
 .playButton {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
   transition: all 0.3s ease;
 }
 
@@ -286,7 +254,6 @@
     padding: 16px;
   }
   
-  .playerInfo,
   .filterBar {
     max-height: 70px;
     padding: 12px;
@@ -305,13 +272,6 @@
       "scoresList";
     gap: 12px;
     padding: 12px;
-  }
-  
-  .backArrow {
-    bottom: 16px;
-    left: 16px;
-    width: 44px;
-    height: 44px;
   }
 }
 

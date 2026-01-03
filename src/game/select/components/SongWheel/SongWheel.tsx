@@ -5,16 +5,22 @@ import styles from './SongWheel.module.css';
 interface SongWheelProps {
   songs: SongWithLevels[];
   selectedSongId: number | null;
+  selectedLevelId?: number | null;
   onSongSelect: (song: SongWithLevels) => void;
   onLevelSelect: (levelId: number) => void;
+  onToggleFavorite?: (levelId: number) => void;
+  userFavorites?: number[];
   loading?: boolean;
 }
 
 const SongWheel: React.FC<SongWheelProps> = ({
   songs,
   selectedSongId,
+  selectedLevelId,
   onSongSelect,
   onLevelSelect,
+  onToggleFavorite,
+  userFavorites = [],
   loading = false
 }) => {
   const [hoveredSongId, setHoveredSongId] = useState<number | null>(null);
@@ -94,7 +100,7 @@ const SongWheel: React.FC<SongWheelProps> = ({
           const minDiff = Math.min(...difficulties);
           const maxDiff = Math.max(...difficulties);
           const difficultyRange = minDiff === maxDiff ? `★${minDiff}` : `★${minDiff}-${maxDiff}`;
-          
+
           return (
             <div
               key={song.songId}
@@ -116,20 +122,42 @@ const SongWheel: React.FC<SongWheelProps> = ({
               {/* Level selector for selected song */}
               {isSelected && song.levels.length > 0 && (
                 <div className={styles.levelSelector}>
-                  {song.levels.map(level => (
-                    <button
-                      key={level.levelId}
-                      className={styles.levelButton}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onLevelSelect(level.levelId);
-                      }}
-                      title={`Difficulty: ★${level.difficulty}`}
-                    >
-                      <span className={styles.levelName}>Level {level.levelId}</span>
-                      <span className={styles.levelStars}>★{level.difficulty}</span>
-                    </button>
-                  ))}
+                  {song.levels.map(level => {
+                    const isFavorited = userFavorites?.includes(level.levelId) || false;
+                    const isActiveLevel = selectedLevelId === level.levelId;
+                    const difficultyRounded = Math.round(parseFloat(level.difficulty.toString()) * 100) / 100;
+                    
+                    return (
+                      <div key={level.levelId} className={styles.levelButtonContainer}>
+                        <button
+                          className={`${styles.levelButton} ${isActiveLevel ? styles.activeLevel : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLevelSelect(level.levelId);
+                          }}
+                          title={`Difficulty: ★${difficultyRounded}`}
+                        >
+                          <span className={styles.levelStars}>★{difficultyRounded}</span>
+                        </button>
+                        
+                        {/* Heart icon for level favorites */}
+                        {onToggleFavorite && (
+                          <button
+                            className={styles.levelFavoriteButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleFavorite(level.levelId);
+                            }}
+                            title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            <span className={`${styles.levelHeartIcon} ${isFavorited ? styles.favorited : ''} ${isActiveLevel ? styles.activeLevel : ''}`}>
+                              ♥
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
