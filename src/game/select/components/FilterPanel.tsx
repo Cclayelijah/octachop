@@ -36,6 +36,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       justifyContent: 'space-between' 
     }}>
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '12px',
+          borderRadius: '16px',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        }}>^_^</div>
         <input
           type="text"
           placeholder="Search songs or artists..."
@@ -45,7 +53,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             flex: 1,
             padding: '12px 16px',
             borderRadius: '10px',
-            border: '2px solid rgba(255,255,255,0.3)',
+            border: '1px solid #000000',
             background: 'rgba(0, 0, 0, 0.3)',
             color: 'white',
             fontSize: '16px',
@@ -86,7 +94,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
         minWidth: 'fit-content'
       }}>
-        {songCount} Songs
+        {songCount} {songCount === 1 ? 'Song' : 'Songs'}
       </div>
     </div>
   );
