@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { UserButton, useUser } from '@clerk/nextjs';
 import Image from 'next/image';
@@ -9,6 +9,29 @@ interface ProfileCardProps {
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ isSettingsOpen }) => {
   const { user } = useUser();
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [isLoadingRank, setIsLoadingRank] = useState(false);
+
+  useEffect(() => {
+    const fetchUserRank = async () => {
+      if (!user?.id) return;
+      
+      setIsLoadingRank(true);
+      try {
+        const response = await fetch(`/api/user/rank?clerkId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUserRank(data.rank);
+        }
+      } catch (error) {
+        console.error('Error fetching user rank:', error);
+      } finally {
+        setIsLoadingRank(false);
+      }
+    };
+
+    fetchUserRank();
+  }, [user?.id]);
 
   return (
     <Box display="flex" justifyContent="space-between" sx={{ paddingTop: 2, paddingRight: 2 }}>
@@ -74,7 +97,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isSettingsOpen }) => {
                 marginTop: '1px'
               }}
             >
-              Rank coming soon
+              {isLoadingRank ? 'Loading rank...' : userRank ? `Rank #${userRank}` : 'Unranked'}
             </Typography>
           </Box>
         )}
