@@ -80,6 +80,11 @@ export default function AddSong({}: Props) {
   const [songArtist, setSongArtist] = useState('')
   const [songArtistUnicode, setSongArtistUnicode] = useState('')
   const [beatmapSetId, setBeatmapSetId] = useState('')
+  
+  // UI state management
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [statusMessage, setStatusMessage] = useState('')
 
   // Helper function to convert file to base64
   const fileToBase64 = (file: File): Promise<string> => {
@@ -91,38 +96,126 @@ export default function AddSong({}: Props) {
     })
   }
 
+  const validateFiles = (): boolean => {
+    // Validate images
+    for (const image of images) {
+      if (!image.file.type.startsWith('image/')) {
+        setSubmitStatus('error')
+        setStatusMessage(`Invalid image file: ${image.name}. Only image files are allowed.`)
+        return false
+      }
+      if (image.file.size > 10 * 1024 * 1024) { // 10MB limit for images
+        setSubmitStatus('error')
+        setStatusMessage(`Image file too large: ${image.name}. Maximum size is 10MB.`)
+        return false
+      }
+    }
+    
+    // Validate audio file
+    if (songFile) {
+      if (!songFile.type.startsWith('audio/')) {
+        setSubmitStatus('error')
+        setStatusMessage(`Invalid audio file: ${songFile.name}. Only audio files are allowed.`)
+        return false
+      }
+      if (songFile.size > 20 * 1024 * 1024) { // 20MB limit for audio
+        setSubmitStatus('error')
+        setStatusMessage(`Audio file too large: ${songFile.name}. Maximum size is 20MB.`)
+        return false
+      }
+    }
+    
+    // Validate beatmap files
+    for (const beatmapFile of songFiles) {
+      if (!beatmapFile.name.endsWith('.osu')) {
+        setSubmitStatus('error')
+        setStatusMessage(`Invalid beatmap file: ${beatmapFile.name}. Only .osu files are allowed.`)
+        return false
+      }
+      if (beatmapFile.size > 1 * 1024 * 1024) { // 1MB limit for beatmaps
+        setSubmitStatus('error')
+        setStatusMessage(`Beatmap file too large: ${beatmapFile.name}. Maximum size is 1MB.`)
+        return false
+      }
+    }
+    
+    return true
+  }
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     
+    // Reset status
+    setSubmitStatus('idle')
+    setStatusMessage('')
+    setIsSubmitting(true)
+    
     if (beatmapSetId === '') {
-      console.log('BeatmapSetId could not be found.')
+      setSubmitStatus('error')
+      setStatusMessage('Beatmap Set ID is required.')
+      setIsSubmitting(false)
       return;
     }
 
     if (!songFile) {
-      console.log('Audio file is required.')
+      setSubmitStatus('error')
+      setStatusMessage('Audio file is required.')
+      setIsSubmitting(false)
       return;
     }
 
     if (images.length === 0) {
-      console.log('At least one image is required.')
+      setSubmitStatus('error')
+      setStatusMessage('At least one image is required.')
+      setIsSubmitting(false)
       return;
     }
 
     if (songFiles.length === 0) {
-      console.log('At least one beatmap file is required.')
+      setSubmitStatus('error')
+      setStatusMessage('At least one beatmap file is required.')
+      setIsSubmitting(false)
+      return;
+    }
+
+    // File validation
+    if (!validateFiles()) {
+      setIsSubmitting(false)
       return;
     }
 
     try {
       console.log('Starting upload process...')
+      setStatusMessage('Starting upload process...')
+      
+      // 0. Clean up any existing files for this beatmapSetId to prevent orphaned files
+      // Note: This does full cleanup for now, but could be made smarter to only clean files being replaced
+      console.log('Cleaning up existing files...')
+      setStatusMessage('Cleaning up existing files...')
+      try {
+        const cleanupResponse = await fetch('/api/song/cleanup', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ songId: beatmapSetId })
+        })
+        
+        if (cleanupResponse.ok) {
+          console.log('Existing files cleaned up successfully')
+        } else {
+          console.warn('Cleanup failed, continuing with upload...')
+        }
+      } catch (cleanupError) {
+        console.warn('Cleanup error, continuing with upload:', cleanupError)
+      }
       
       // 1. Upload images to storage
       console.log('Uploading images...')
+      setStatusMessage(`Uploading ${images.length} image(s)...`)
       const uploadedImages: string[] = []
       
       for (const image of images) {
         try {
+          setStatusMessage(`Uploading image: ${image.name}`)
           const imageData = await fileToBase64(image.file)
           const response = await fetch('/api/song/upload', {
             method: 'POST',
@@ -141,14 +234,23 @@ export default function AddSong({}: Props) {
             console.log('Image uploaded:', image.name)
           } else {
             console.error('Image upload failed:', result.error)
+            setSubmitStatus('error')
+            setStatusMessage(`Failed to upload image: ${image.name} - ${result.error}`)
+            setIsSubmitting(false)
+            return
           }
         } catch (error) {
           console.error('Error uploading image:', error)
+          setSubmitStatus('error')
+          setStatusMessage(`Error uploading image: ${image.name}`)
+          setIsSubmitting(false)
+          return
         }
       }
 
       // 2. Upload audio file
       console.log('Uploading audio file...')
+      setStatusMessage(`Uploading audio file: ${songFile.name}`)
       let songUrl = ''
       try {
         const audioData = await fileToBase64(songFile)
@@ -169,35 +271,45 @@ export default function AddSong({}: Props) {
           console.log('Audio file uploaded:', songFile.name)
         } else {
           console.error('Audio upload failed:', result.error)
+          setSubmitStatus('error')
+          setStatusMessage(`Failed to upload audio file: ${result.error}`)
+          setIsSubmitting(false)
           return
         }
       } catch (error) {
         console.error('Error uploading audio file:', error)
+        setSubmitStatus('error')
+        setStatusMessage('Error uploading audio file')
+        setIsSubmitting(false)
         return
-        // 3. Process beatmap files and create levels
-        console.log('Processing beatmap files...')
-        const levels: Level[] = []
+      }
+
+      // 3. Process beatmap files and create levels
+      console.log('Processing beatmap files...')
+      setStatusMessage(`Processing ${songFiles.length} beatmap file(s)...`)
+      const levels: Level[] = []
+      
+      for (let i = 0; i < songFiles.length; i++) {
+        const beatmapFile = songFiles[i]
+        const level = levelData[i]
         
-        for (let i = 0; i < songFiles.length; i++) {
-          const beatmapFile = songFiles[i]
-          const level = levelData[i]
-          
-          if (!level) {
-            console.error(`No level data found for beatmap file: ${beatmapFile.name}`)
-            continue
-          }
-          
-          try {
-            // Upload beatmap file as audio (it contains the beatmap data)
-            const beatmapData = await fileToBase64(beatmapFile)
-            const response = await fetch('/api/song/upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                songId: beatmapSetId,
-                fileType: 'audio',
-                fileName: beatmapFile.name,
-                fileData: beatmapData.split(',')[1]
+        if (!level) {
+          console.error(`No level data found for beatmap file: ${beatmapFile.name}`)
+          continue
+        }
+        
+        try {
+          setStatusMessage(`Uploading beatmap: ${beatmapFile.name}`)
+          // Upload beatmap file as audio (it contains the beatmap data)
+          const beatmapData = await fileToBase64(beatmapFile)
+          const response = await fetch('/api/song/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              songId: beatmapSetId,
+              fileType: 'audio',
+              fileName: beatmapFile.name,
+              fileData: beatmapData.split(',')[1]
               })
             })
             
@@ -209,6 +321,7 @@ export default function AddSong({}: Props) {
               console.log('Beatmap file uploaded:', beatmapFile.name)
             } else {
               console.error('Beatmap upload failed:', result.error)
+              console.warn(`Skipping failed beatmap: ${beatmapFile.name}`)
               continue
             }
             
@@ -219,11 +332,13 @@ export default function AddSong({}: Props) {
             })
           } catch (error) {
             console.error('Error processing beatmap file:', error)
+            console.warn(`Skipping failed beatmap: ${beatmapFile.name}`)
           }
         }
 
         // 4. Create song in database
         console.log('Creating song in database...')
+        setStatusMessage('Saving song to database...')
         const defaultImg = uploadedImages.find(url => url.includes(defaultImage || '')) || uploadedImages[0] || ''
         
         const songData = {
@@ -250,29 +365,65 @@ export default function AddSong({}: Props) {
         const createResult = await createResponse.json()
         
         if (createResponse.ok) {
-          console.log('Song was saved successfully:', createResult.song)
-          alert('Song created successfully!')
-          // Reset form
-          setBeatmapSetId('')
-          setSongTitle('')
-          setSongTitleUnicode('')
-          setSongArtist('')
-          setSongArtistUnicode('')
-          setImages([])
-          setSongFiles([])
-          setSongFile(undefined)
-          setLevelData([])
-          setDefaultImage(undefined)
+          console.log('Song operation successful:', createResult)
+          setSubmitStatus('success')
+          
+          // Handle different response types
+          if (createResult.message) {
+            // Existing song with new levels added
+            if (createResult.newLevels !== undefined) {
+              setStatusMessage(`Added ${createResult.newLevels} new level(s) to existing song "${songTitle}"! Total levels: ${createResult.song?.levels?.length || 'unknown'}`)
+            } else {
+              // Song created successfully
+              setStatusMessage(`Song "${songTitle}" created successfully! ${levels.length} levels added.`)
+            }
+          } else {
+            // Fallback message
+            setStatusMessage(`Song "${songTitle}" processed successfully!`)
+          }
+          
+          // Reset form after successful submission
+          resetForm()
         } else {
           console.error('Song could not be saved:', createResult.error)
-          alert('Failed to create song: ' + createResult.error)
+          setSubmitStatus('error')
+          setStatusMessage(`Failed to process song: ${createResult.error || 'Unknown error'}`)
         }
-      }
-    } 
-    catch (error) {
+    } catch (error) {
       console.error('Error in submit process:', error)
-      alert('An error occurred while creating the song')
+      setSubmitStatus('error')
+      
+      // Handle different types of errors
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        setStatusMessage('Connection error: Unable to reach the server. This might be due to the large file size or server timeout.')
+      } else if (error instanceof TypeError && error.message.includes('NetworkError')) {
+        setStatusMessage('Network error: Please check your internet connection and try again.')
+      } else {
+        setStatusMessage('An unexpected error occurred while creating the song')
+      }
+    } finally {
+      setIsSubmitting(false)
     }
+  };
+
+  // Helper function to reset the form
+  const resetForm = () => {
+    setBeatmapSetId('')
+    setSongTitle('')
+    setSongTitleUnicode('')
+    setSongArtist('')
+    setSongArtistUnicode('')
+    setImages([])
+    setSongFiles([])
+    setSongFile(undefined)
+    setLevelData([])
+    setDefaultImage(undefined)
+    
+    // Reset file inputs
+    const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>
+    fileInputs.forEach(input => {
+      input.value = ''
+    })
   };
 
   const extractSongData = async (file:File) => {
@@ -361,6 +512,42 @@ export default function AddSong({}: Props) {
       <Panel />
       <BodyContainer>
         <PageHeading title="Add Song" />
+        
+        {/* Status Messages */}
+        {submitStatus !== 'idle' && (
+          <Box
+            style={{
+              padding: '16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              backgroundColor: submitStatus === 'success' ? '#d4edda' : '#f8d7da',
+              color: submitStatus === 'success' ? '#155724' : '#721c24',
+              border: `1px solid ${submitStatus === 'success' ? '#c3e6cb' : '#f5c6cb'}`
+            }}
+          >
+            <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+              {submitStatus === 'success' ? '✅ Success!' : '❌ Error'}
+            </Typography>
+            <Typography variant="body2">{statusMessage}</Typography>
+          </Box>
+        )}
+        
+        {/* Loading indicator */}
+        {isSubmitting && submitStatus === 'idle' && (
+          <Box
+            style={{
+              padding: '16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              backgroundColor: '#d1ecf1',
+              color: '#0c5460',
+              border: '1px solid #bee5eb'
+            }}
+          >
+            <Typography variant="body2">⏳ {statusMessage}</Typography>
+          </Box>
+        )}
+        
         <PageContent>
           <form
             onSubmit={handleSubmit}
@@ -528,8 +715,8 @@ export default function AddSong({}: Props) {
               >
                 Cancel
               </Button>
-              <Button variant="contained" type="submit" size="large">
-                Submit
+              <Button variant="contained" type="submit" size="large" disabled={isSubmitting}>
+                {isSubmitting ? 'Uploading...' : 'Submit'}
               </Button>
             </Box>
           </form>

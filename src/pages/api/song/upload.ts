@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createServerSupabaseClient, STORAGE_BUCKETS } from 'src/lib/supabase'
+import { generateFilePath } from 'src/lib/fileUpload'
 
 // Configure API route to handle larger files
 export const config = {
@@ -57,9 +58,9 @@ export default async function handle(
             })
         }
         
-        // Determine storage bucket and path
+        // Determine storage bucket and path with proper sanitization
         const bucket = fileType === 'audio' ? STORAGE_BUCKETS.SONGS : STORAGE_BUCKETS.IMAGES
-        const path = `${songId}/${Date.now()}_${fileName}`
+        const path = generateFilePath(songId, fileName, fileType === 'audio' ? 'audio' : 'image')
         const contentType = fileType === 'audio' ? 'audio/mpeg' : 'image/jpeg'
 
         // Use Supabase directly for upload

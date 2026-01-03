@@ -5,6 +5,16 @@ import { uploadFileServer } from 'src/lib/fileUpload';
 
 const prisma = new PrismaClient()
 
+// Configure API to handle large payloads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb', // Allow up to 50MB for large song uploads
+    },
+    responseLimit: false,
+  },
+}
+
 // /api/song
 // Required fields in body: beatmapSetId, songUrl, title, titleUnicode, artist, artistUnicode
 // Optional fields in body: defaultImg
@@ -86,13 +96,62 @@ async function handlePOST(
     try {
         // Check if song with this beatmapSetId already exists
         const existing = await prisma.song.findFirst({
-            where: { beatmapSetId: Number(songData.beatmapSetId) }
+            where: { beatmapSetId: Number(songData.beatmapSetId) },
+            include: {
+                levels: {
+                    where: { active: true }
+                }
+            }
         })
 
         if (existing) {
-            return res.status(409).json({ 
-                error: 'Song already exists', 
-                song: existing 
+            console.log(`Song ${songData.beatmapSetId} already exists, adding new levels...`)
+            
+            // Get existing beatmapIds to avoid duplicates
+            const existingBeatmapIds = new Set(existing.levels.map(level => level.beatmapId))
+            
+            // Filter out levels that already exist
+            const newLevels = levels.filter(level => !existingBeatmapIds.has(level.beatmapId))
+            
+            if (newLevels.length === 0) {
+                return res.status(200).json({ 
+                    message: 'No new levels to add - all levels already exist',
+                    song: existing,
+                    skippedLevels: levels.length
+                });
+            }
+            
+            // Add new levels to existing song
+            const updatedLevels = await prisma.level.createMany({
+                data: newLevels.map(level => ({
+                    songId: existing.songId,
+                    beatmapId: Number(level.beatmapId),
+                    difficulty: Number(level.difficulty),
+                    image: level.image,
+                    approachRate: Number(level.approachRate),
+                    noteData: level.noteData,
+                    breakData: level.breakData,
+                    beatmapUrl: level.beatmapUrl,
+                    active: true
+                }))
+            })
+            
+            // Get updated song with all levels
+            const updatedSong = await prisma.song.findFirst({
+                where: { songId: existing.songId },
+                include: {
+                    levels: {
+                        where: { active: true },
+                        orderBy: { difficulty: 'asc' }
+                    }
+                }
+            })
+            
+            return res.status(200).json({ 
+                message: `Added ${newLevels.length} new level(s) to existing song`,
+                song: updatedSong,
+                newLevels: newLevels.length,
+                existingLevels: existingBeatmapIds.size
             });
         }
 

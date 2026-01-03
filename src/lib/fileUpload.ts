@@ -94,11 +94,112 @@ export const uploadFileServer = async ({
   }
 }
 
-// Helper function to generate unique file paths
+// Helper function to generate clean file paths (no timestamps for predictable overwriting)
 export const generateFilePath = (songId: string, filename: string, type: 'audio' | 'image'): string => {
-  const timestamp = Date.now()
-  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
-  return `${songId}/${timestamp}_${sanitizedFilename}`
+  // More aggressive sanitization for Supabase storage compatibility
+  // Keep only alphanumeric characters, dots, hyphens, and underscores
+  const sanitizedFilename = filename
+    .replace(/[^a-zA-Z0-9.-]/g, '_') // Replace any non-alphanumeric chars (except .-) with underscore
+    .replace(/_+/g, '_') // Replace multiple underscores with single underscore
+    .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+    .toLowerCase() // Convert to lowercase for consistency
+  
+  // Use predictable paths that can be overwritten (no timestamps)
+  return `${songId}/${sanitizedFilename}`
+}
+
+// Helper function to clean up existing files for a song
+export const cleanupSongFiles = async (songId: string): Promise<boolean> => {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Clean up both image and audio buckets
+    const buckets = [STORAGE_BUCKETS.IMAGES, STORAGE_BUCKETS.SONGS]
+    
+    for (const bucket of buckets) {
+      // List all files in the songId folder
+      const { data: files, error: listError } = await supabase.storage
+        .from(bucket)
+        .list(songId, { limit: 1000 })
+      
+      if (listError) {
+        console.warn(`Could not list files in ${bucket}/${songId}:`, listError.message)
+        continue
+      }
+      
+      if (files && files.length > 0) {
+        // Delete all files in the folder
+        const filePaths = files.map(file => `${songId}/${file.name}`)
+        const { error: deleteError } = await supabase.storage
+          .from(bucket)
+          .remove(filePaths)
+        
+        if (deleteError) {
+          console.warn(`Could not delete some files in ${bucket}/${songId}:`, deleteError.message)
+        } else {
+          console.log(`Cleaned up ${files.length} files from ${bucket}/${songId}`)
+        }
+      }
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error cleaning up song files:', error)
+    return false
+  }
+}
+
+// Helper function to clean up specific files for levels being replaced
+export const cleanupSpecificFiles = async (songId: string, filesToCleanup: string[]): Promise<boolean> => {
+  try {
+    if (filesToCleanup.length === 0) return true
+    
+    const supabase = createServerSupabaseClient()
+    
+    // Group files by bucket type
+    const imageFiles: string[] = []
+    const audioFiles: string[] = []
+    
+    filesToCleanup.forEach(filename => {
+      const path = `${songId}/${filename.toLowerCase()}`
+      if (filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        imageFiles.push(path)
+      } else {
+        audioFiles.push(path)
+      }
+    })
+    
+    // Clean up image files
+    if (imageFiles.length > 0) {
+      const { error: imageError } = await supabase.storage
+        .from(STORAGE_BUCKETS.IMAGES)
+        .remove(imageFiles)
+      
+      if (imageError) {
+        console.warn(`Could not delete some image files:`, imageError.message)
+      } else {
+        console.log(`Cleaned up ${imageFiles.length} image files`)
+      }
+    }
+    
+    // Clean up audio files
+    if (audioFiles.length > 0) {
+      const { error: audioError } = await supabase.storage
+        .from(STORAGE_BUCKETS.SONGS)
+        .remove(audioFiles)
+      
+      if (audioError) {
+        console.warn(`Could not delete some audio files:`, audioError.message)
+      } else {
+        console.log(`Cleaned up ${audioFiles.length} audio files`)
+      }
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error cleaning up specific files:', error)
+    return false
+  }
 }
 
 // Helper function to upload audio file
