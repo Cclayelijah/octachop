@@ -204,7 +204,7 @@ export default function AdminRoute({ children }: AdminRouteProps) {
             Access Denied
           </Typography>
           <Typography variant="body1" sx={{ color: '#8b4513', mb: 4, fontSize: '1.1rem', opacity: 0.9 }}>
-            You don't have permission to access this area. Admin privileges are required.
+            You don&apos;t have permission to access this area. Admin privileges are required.
           </Typography>
           <Typography variant="body2" sx={{ color: '#8b4513', opacity: 0.7 }}>
             Current role: {userRole?.userTypeName || 'user'}

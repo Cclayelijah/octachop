@@ -100,7 +100,7 @@ async function handlePOST(
         console.log('levels sample:', levels.length > 0 ? JSON.stringify(levels[0], null, 2) : 'No levels')
 
         // Check if song with this beatmapSetId already exists (only if beatmapSetId is provided)
-        let existing = null
+        let existing: any = null
         if (songData.beatmapSetId) {
             existing = await prisma.song.findFirst({
                 where: { beatmapSetId: Number(songData.beatmapSetId) },
@@ -116,7 +116,7 @@ async function handlePOST(
             console.log(`Song ${songData.beatmapSetId} already exists, adding new levels...`)
             
             // Get existing beatmapIds to avoid duplicates
-            const existingBeatmapIds = new Set(existing.levels.map(level => level.beatmapId))
+            const existingBeatmapIds = new Set(existing.levels.map((level: any) => level.beatmapId))
             
             // Filter out levels that already exist
             const newLevels = levels.filter(level => !existingBeatmapIds.has(level.beatmapId))

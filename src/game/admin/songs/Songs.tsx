@@ -291,7 +291,7 @@ export default function AdminSongs() {
           <DialogContent>
             {confirmDialog.song && (
               <Typography variant="body1">
-                Are you sure you want to {confirmDialog.action} "{confirmDialog.song.title}" by {confirmDialog.song.artist}?
+                Are you sure you want to {confirmDialog.action} &quot;{confirmDialog.song.title}&quot; by {confirmDialog.song.artist}?
                 {confirmDialog.action === 'disable' && (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="body2" color="warning.main">
