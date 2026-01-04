@@ -282,34 +282,61 @@ export const windowResized = (p5) => {
 
 export function start(data) {
   console.log("start");
+  
+  // Wait for p5 instance to be ready
+  if (!p) {
+    console.log("P5 instance not ready, retrying in 100ms...");
+    setTimeout(() => start(data), 100);
+    return;
+  }
+  
   started = true;
   track = data;
   console.log(track);
 
+  // Load new audio file
+  if (song) {
+    song.stop();
+  }
+  song = p.loadSound(track.audio, () => {
+    console.log("Audio loaded successfully");
+    songDuration = song.duration() * 1000;
+    song.onended(() => {
+      if (!paused) songEnded = true;
+    });
+  });
+
+  // Handle background image - check if it's a full URL or relative path
+  let imageUrl;
+  if (track.bgImage.startsWith('http')) {
+    imageUrl = track.bgImage;
+  } else {
+    imageUrl = `res/tracks/${TRACK_NAME}/` + track.bgImage;
+  }
+
   let img = new Image();
-  img.src = `res/tracks/${TRACK_NAME}/` + track.bgImage;
-  if (img.height != 0)
+  img.src = imageUrl;
+  if (img.height != 0) {
     trackBg = p.loadImage(
-      `res/tracks/${TRACK_NAME}/` + track.bgImage,
+      imageUrl,
       () => {
-        console.log("loaded");
+        console.log("Background image loaded");
       },
       () => {
-        console.log("failed to load image");
+        console.log("Failed to load background image, using fallback");
         trackBg = p.loadImage("res/images/retro-city.jpg");
       }
     );
+  } else {
+    trackBg = p.loadImage("res/images/retro-city.jpg");
+  }
+
   noteData = JSON.stringify(track.notes);
   breakData = JSON.stringify(track.breaks);
   notes = JSON.parse(noteData);
   breaksLeft = JSON.parse(breakData);
   const AR = track.approachRate;
   approachTime = 1800 - (AR < 5 ? 120 * AR : 120 * 5 + 150 * (AR - 5));
-  song.stop();
-  songDuration = song.duration() * 1000;
-  song.onended(() => {
-    if (!paused) songEnded = true;
-  });
   
   // Ensure AudioContext is created and resumed
   if (context == undefined) {
@@ -317,11 +344,23 @@ export function start(data) {
   }
   
   context.resume().then(() => {
-    song.play(DELAY_START);
+    if (song && song.isLoaded()) {
+      song.play(DELAY_START);
+    } else {
+      // Wait for song to load then play
+      const checkLoaded = setInterval(() => {
+        if (song && song.isLoaded()) {
+          clearInterval(checkLoaded);
+          song.play(DELAY_START);
+        }
+      }, 100);
+    }
   }).catch((error) => {
     console.warn('AudioContext resume failed:', error);
     // Fallback: try to play without context resume
-    song.play(DELAY_START);
+    if (song && song.isLoaded()) {
+      song.play(DELAY_START);
+    }
   });
 }
 

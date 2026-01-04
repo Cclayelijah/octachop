@@ -1,6 +1,7 @@
 // @ts-nocheck
 import type { FC } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import {
   doubleClicked,
@@ -16,6 +17,7 @@ import {
 } from "./sketch";
 import { loadP5Sound } from "../lib/p5SoundLoader";
 import { setActiveSketch } from "../lib/sketchManager";
+import { SongWithLevels, Level } from "../../shared/types";
 // Will only import `react-p5` on client-side
 const Sketch = dynamic(
   () =>
@@ -2334,6 +2336,65 @@ export const handleStart = () => {
 };
 
 const Play: FC = () => {
+  const router = useRouter();
+  const [trackData, setTrackData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTrackData = async () => {
+      const { songId, levelId } = router.query;
+      
+      if (!songId || !levelId) {
+        console.warn('No songId or levelId provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch the song and level data
+        const songResponse = await fetch(`/api/song/${songId}`);
+        if (!songResponse.ok) {
+          throw new Error('Failed to fetch song data');
+        }
+        const { song: songData }: { song: SongWithLevels } = await songResponse.json();
+        
+        const level = songData.levels.find(l => l.levelId === parseInt(levelId as string));
+        
+        if (!level) {
+          console.error('Level not found');
+          setLoading(false);
+          return;
+        }
+
+        // Transform the data into the format expected by the game
+        const gameTrackData = {
+          title: songData.title || songData.titleUnicode,
+          difficulty: level.difficulty,
+          approachRate: level.approachRate || 8,
+          bgImage: songData.defaultImg || 'retro-city.jpg',
+          audio: songData.songUrl,
+          notes: typeof level.noteData === 'string' ? JSON.parse(level.noteData) : (level.noteData || []),
+          breaks: typeof level.breakData === 'string' ? JSON.parse(level.breakData) : (level.breakData || []),
+        };
+
+        setTrackData(gameTrackData);
+        setLoading(false);
+        
+        // Wait for p5 setup to complete before starting the game
+        setTimeout(() => {
+          start(gameTrackData);
+        }, 500);
+      } catch (error) {
+        console.error('Error loading track data:', error);
+        setLoading(false);
+      }
+    };
+
+    if (router.isReady) {
+      loadTrackData();
+    }
+  }, [router.isReady, router.query]);
+
   useEffect(() => {
     // Enhanced Safari mobile scroll prevention
     const preventTouchMove = (e: TouchEvent) => {
@@ -2366,6 +2427,56 @@ const Play: FC = () => {
       document.removeEventListener('wheel', preventScroll);
     };
   }, []);
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        color: 'white',
+        fontSize: '24px',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        Loading game data...
+      </div>
+    );
+  }
+
+  if (!trackData) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        color: 'white',
+        fontSize: '18px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        gap: '16px'
+      }}>
+        <div>Failed to load game data.</div>
+        <button 
+          onClick={() => router.back()}
+          style={{
+            padding: '12px 24px',
+            background: 'rgba(190, 183, 223, 0.2)',
+            border: '1px solid rgba(190, 183, 223, 0.4)',
+            borderRadius: '8px',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -1,7 +1,17 @@
 Song Select Page:
-  - Make "start" button a circle that beats to the rhythm of the music.
-  - Update scroll functionality to be audio knob instead.
-  - Can drag with mouse to move song wheel.
+  - Fix scroll functionality to adjust volume
+    - Can drag with mouse to move song wheel
+  - When clicking on the logo, the image updates and a random song is set to active
+
+Play:
+  - Load up selected level
+  - Add pause screen, death feature, and that one important bug fix.
+  - Add quit functionality
+  - Save PlayResult data
+  - Make it playable for guest accounts
+  - Load up configured settings
+
 
 Other:
   - Change scrollbar on settings drawer to white
+  - Sync settings per user in db
