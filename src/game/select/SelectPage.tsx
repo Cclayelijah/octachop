@@ -969,7 +969,10 @@ const SelectPage: React.FC = () => {
         </div>
         <div className={styles.sketch}></div>
         <div className={styles.playButton}>
-          <GoPlay />
+          <GoPlay 
+            selectedSong={selectedSong} 
+            selectedLevel={selectedLevel}
+          />
         </div>
       </div>
         </>
