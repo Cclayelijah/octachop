@@ -4,4 +4,4 @@ Song Select Page:
   - Can drag with mouse to move song wheel.
 
 Other:
-  - Change AddSongSet to AddSong
+  - Change scrollbar on settings drawer to white
